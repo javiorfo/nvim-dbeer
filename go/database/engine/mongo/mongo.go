@@ -87,7 +87,6 @@ func (m *Mongo) GetTables() {
 	defer cancel()
 	db, closer, err := m.getDB(ctx)
 	if err != nil {
-		fmt.Printf(err.Error())
 		return
 	}
 	defer closer()
@@ -95,7 +94,6 @@ func (m *Mongo) GetTables() {
 	collections, err := db.ListCollections(ctx, bson.D{})
 	if err != nil {
 		logger.Errorf("Error listing collection:", err)
-		fmt.Printf("[ERROR] %v", err)
 		return
 	}
 
@@ -105,7 +103,6 @@ func (m *Mongo) GetTables() {
 		err := collections.Decode(&collection)
 		if err != nil {
 			logger.Errorf("Error decoding collection:", err)
-			fmt.Printf("[ERROR] %v", err)
 			return
 		}
 		values = append(values, collection["name"].(string))
@@ -113,7 +110,6 @@ func (m *Mongo) GetTables() {
 
 	if err := collections.Err(); err != nil {
 		logger.Errorf("Error iterating over rows:", err)
-		fmt.Printf("[ERROR] %v", err)
 		return
 	}
 

@@ -211,7 +211,6 @@ func (p *ProtoSQL) ExecuteSelect(db *sql.DB) {
 func (p *ProtoSQL) GetTables() {
 	db, closer, err := p.GetDB()
 	if err != nil {
-		fmt.Printf(err.Error())
 		return
 	}
 	defer closer()
@@ -221,7 +220,6 @@ func (p *ProtoSQL) GetTables() {
 	rows, err := db.Query(p.Queries)
 	if err != nil {
 		logger.Errorf("Error executing query:", err)
-		fmt.Printf("[ERROR] %v", err)
 		return
 	}
 	defer rows.Close()
@@ -231,7 +229,6 @@ func (p *ProtoSQL) GetTables() {
 		var table string
 		if err := rows.Scan(&table); err != nil {
 			logger.Errorf("Error scanning row:", err)
-			fmt.Printf("[ERROR] %v", err)
 			return
 		}
 		values = append(values, strings.ToUpper(table))
@@ -239,7 +236,6 @@ func (p *ProtoSQL) GetTables() {
 
 	if err := rows.Err(); err != nil {
 		logger.Errorf("Error iterating over rows:", err)
-		fmt.Printf("[ERROR] %v", err)
 		return
 	}
 

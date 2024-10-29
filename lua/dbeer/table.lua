@@ -76,7 +76,7 @@ local function show_table_info(table_selected)
                 do_after = function()
                     vim.cmd [[ setlocal nowrap ]]
                     vim.cmd [[ setl noma ]]
-                    vim.cmd(line_1:gsub("?", "󰠵"))
+                    vim.cmd(line_1)
                 end
             }
 
@@ -100,22 +100,32 @@ local function get_tables()
         engines.db[conn.engine].executor, conn.engine,
         core.get_connection_string(), util.dbeer_log_file, conn.dbname, setup.internal.log_debug))
 
-    util.logger:debug(result)
+    if result ~= "" then
+        util.logger:debug(result)
 
-    local str = result:gsub("%[", ""):gsub("%]", ""):gsub("^%s*(.-)%s*$", "%1"):gsub(",", "")
+        local str = result:gsub("%[", ""):gsub("%]", ""):gsub("^%s*(.-)%s*$", "%1"):gsub(",", "")
 
-    local table_names = {}
-    for word in str:gmatch("%S+") do
-        table.insert(table_names, word)
+        local table_names = {}
+        for word in str:gmatch("%S+") do
+            table.insert(table_names, word)
+        end
+        return true, table_names
+    else
+        util.logger:error("Could not get system tables.")
+        return false, nil
     end
-    return table_names
 end
 
 function M.show()
+    local ok, tables = get_tables()
+    if not ok then
+        return
+    end
+
     pickers.new({
         prompt_title = "  DBeer - Table Picker",
         finder = finders.new_table({
-            results = get_tables(),
+            results = tables,
             entry_maker = function(entry)
                 return {
                     value = entry,
