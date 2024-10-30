@@ -297,9 +297,9 @@ mycollection.find({ "field1": "value1" }).sort({"info": -1})
 ---
 
 ## Tricks
-As **nvim-dbeer** resets the default database connection everytime Neovim is close. There is a chance to set N scripts to X database everytime threy are opened. Using **Neovim autocmd**:
+As **nvim-dbeer** resets the default database connection everytime Neovim is close. There is a chance to set N scripts to X database everytime threy are opened. Using **Neovim autocmd** in **init.lua**:
 ```lua
--- Everytime test.sql, other.sql, update.sql the default database is set to '2' 
+-- Everytime test.sql, other.sql, update.sql are opened the default database is set to '2' 
 vim.api.nvim_create_autocmd("BufReadPost", {
     pattern = { "test.sql", "other.sql", "update.sql" },
     callback = function()
