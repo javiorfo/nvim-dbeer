@@ -2,7 +2,7 @@
 *Minimal Multi database client for Neovim*
 
 ## Caveats
-- These dependencies are required to be installed: `Go v1.23.2`, `unixodbc`. 
+- These dependencies are required to be installed: `Go` (1.23), `unixodbc`. 
 - For the sake of simplicity, **this plugin is STATELESS**. It does not use database sessions or keep states after Neovim is closed.
 - This plugin has been developed on and for `Linux` following open source philosophy.
 
@@ -38,6 +38,7 @@
 - [Supported Operations](#supported-operations)
 - [Usage](#usage)
 - [Commands](#commands)
+- [Tricks](#tricks)
 - [Logs](#logs)
 
 ---
@@ -292,6 +293,20 @@ mycollection.find({ "field1": "value1" }).sort({"info": -1})
 <img src="https://github.com/javiorfo/img/blob/master/nvim-dbeer/dbeer-tableinfo.gif?raw=true" alt="nvim-dbeer"/>
 
 **NOTE:** The colorscheme **nox** from [nvim-nyctophilia](https://github.com/javiorfo/nvim-nyctophilia) is used in this image.
+
+---
+
+## Tricks
+As **nvim-dbeer** resets the default database connection everytime Neovim is close. There is a chance to set N scripts to X database everytime threy are opened. Using **Neovim autocmd**:
+```lua
+-- Everytime test.sql, other.sql, update.sql the default database is set to '2' 
+vim.api.nvim_create_autocmd("BufReadPost", {
+    pattern = { "test.sql", "other.sql", "update.sql" },
+    callback = function()
+        require 'dbeer'.default_db = 2
+    end,
+})
+```
 
 ---
 
