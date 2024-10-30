@@ -122,6 +122,43 @@ function M.setup(opts)
     end
 
     util.logger:debug("Configuration: " .. vim.inspect(M.SETTINGS))
+
+    local function map_or_unmap(connection, is_mongo)
+        if connection.name and connection.dbname and connection.engine and require 'dbeer.engines'.db[connection.engine] and is_mongo then
+            vim.api.nvim_set_keymap('v', M.SETTINGS.commands.execute, '<cmd>lua require("dbeer.core").run()<CR>',
+                { noremap = true, silent = true })
+            vim.api.nvim_set_keymap('n', M.SETTINGS.commands.execute, '<cmd>lua require("dbeer.core").run()<CR>',
+                { noremap = true, silent = true })
+            vim.api.nvim_set_keymap('n', M.SETTINGS.commands.close, '<cmd>lua require("dbeer.core").close()<CR>',
+                { noremap = true, silent = true })
+        else
+            pcall(vim.keymap.del, 'v', M.SETTINGS.commands.execute)
+            pcall(vim.keymap.del, 'n', M.SETTINGS.commands.execute)
+            pcall(vim.keymap.del, 'n', M.SETTINGS.commands.close)
+        end
+    end
+
+    vim.api.nvim_create_autocmd("BufEnter", {
+        pattern = "*.js",
+        callback = function()
+            local db = M.SETTINGS.db
+            if db.connections then
+                local connection = db.connections[require 'dbeer'.default_db]
+                map_or_unmap(connection, connection.engine == "mongo")
+            end
+        end,
+    })
+
+    vim.api.nvim_create_autocmd("BufEnter", {
+        pattern = "*.sql",
+        callback = function()
+            local db = M.SETTINGS.db
+            if db.connections then
+                local connection = db.connections[require 'dbeer'.default_db]
+                map_or_unmap(connection, connection.engine ~= "mongo")
+            end
+        end,
+    })
 end
 
 return M
