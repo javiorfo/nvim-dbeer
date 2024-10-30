@@ -1,7 +1,6 @@
 local M = {}
 local util = require 'dbeer.util'
 local engines = require 'dbeer.engines'
-local logger = util.logger
 
 M.SETTINGS = {
     commands = {
@@ -123,48 +122,6 @@ function M.setup(opts)
     end
 
     util.logger:debug("Configuration: " .. vim.inspect(M.SETTINGS))
-
-    vim.api.nvim_create_autocmd("BufEnter", {
-        pattern = "*.js",
-        callback = function()
-            local db = M.SETTINGS.db
-
-            if db.connections then
-                local connection = db.connections[require 'dbeer'.default_db]
-                if connection.name and connection.dbname and connection.engine and require 'dbeer.engines'.db[connection.engine] and connection.engine == "mongo" then
-                    logger:info(string.format("Database set to [%s]", connection.name))
-
-                    vim.api.nvim_set_keymap('v', M.SETTINGS.commands.execute, '<cmd>lua require("dbeer.core").run()<CR>',
-                        { noremap = true, silent = true })
-                    vim.api.nvim_set_keymap('n', M.SETTINGS.commands.execute, '<cmd>lua require("dbeer.core").run()<CR>',
-                        { noremap = true, silent = true })
-                    vim.api.nvim_set_keymap('n', M.SETTINGS.commands.close, '<cmd>lua require("dbeer.core").close()<CR>',
-                        { noremap = true, silent = true })
-                end
-            end
-        end,
-    })
-
-    vim.api.nvim_create_autocmd("BufEnter", {
-        pattern = "*.sql",
-        callback = function()
-            local db = M.SETTINGS.db
-
-            if db.connections then
-                local connection = db.connections[require 'dbeer'.default_db]
-                if connection.name and connection.dbname and connection.engine and require 'dbeer.engines'.db[connection.engine] and connection.engine == "mongo" then
-                    logger:info(string.format("Database set to [%s]", connection.name))
-
-                    vim.api.nvim_set_keymap('v', M.SETTINGS.commands.execute, '<cmd>lua require("dbeer.core").run()<CR>',
-                        { noremap = true, silent = true })
-                    vim.api.nvim_set_keymap('n', M.SETTINGS.commands.execute, '<cmd>lua require("dbeer.core").run()<CR>',
-                        { noremap = true, silent = true })
-                    vim.api.nvim_set_keymap('n', M.SETTINGS.commands.close, '<cmd>lua require("dbeer.core").close()<CR>',
-                        { noremap = true, silent = true })
-                end
-            end
-        end,
-    })
 end
 
 return M
