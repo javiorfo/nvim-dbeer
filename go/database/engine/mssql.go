@@ -19,7 +19,7 @@ func (ms *MSSql) GetTables() {
 func (ms *MSSql) GetTableInfo() {
 	db, closer, err := ms.GetDB()
 	if err != nil {
-		fmt.Printf(err.Error())
+		fmt.Print(err.Error())
 		return
 	}
 	defer closer()

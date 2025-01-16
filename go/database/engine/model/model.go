@@ -43,7 +43,7 @@ func (p *ProtoSQL) GetDB() (*sql.DB, func(), error) {
 func (p *ProtoSQL) Ping() {
     db, closer, err := p.GetDB()
 	if err != nil {
-		fmt.Printf(err.Error())
+		fmt.Print(err.Error())
 		return
 	}
 	defer closer()
@@ -60,7 +60,7 @@ func (p *ProtoSQL) Ping() {
 func (p *ProtoSQL) Run() {
 	db, closer, err := p.GetDB()
 	if err != nil {
-		fmt.Printf(err.Error())
+		fmt.Print(err.Error())
 		return
 	}
 	defer closer()
@@ -245,7 +245,7 @@ func (p *ProtoSQL) GetTables() {
 func (p *ProtoSQL) GetTableInfo() {
 	db, closer, err := p.GetDB()
 	if err != nil {
-		fmt.Printf(err.Error())
+		fmt.Print(err.Error())
 		return
 	}
 	defer closer()

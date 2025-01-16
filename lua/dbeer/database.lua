@@ -34,13 +34,13 @@ function M.show()
         footer = { setup.commands.select_db .. " to select", "String" },
         content = content,
         do_after = function()
-
             local expand_db_command = setup.commands.expand_db
             local line = string.format("%s (press %s to toggle)", vim.fn.getline(1), expand_db_command)
             vim.fn.setline(1, line)
 
             vim.cmd("syn match dbeerConnData '󱘖 Connection Data' | hi link dbeerConnData Type")
-            vim.cmd(string.format("syn match dbeerExpand '(press %s to toggle)' | hi link dbeerExpand Comment", expand_db_command))
+            vim.cmd(string.format("syn match dbeerExpand '(press %s to toggle)' | hi link dbeerExpand Comment",
+                expand_db_command))
 
             util.disable_editing_popup()
 
@@ -106,14 +106,8 @@ function M.expand()
     if string.find(lines[line_nr], constants.CHECKED_ICON) or string.find(lines[line_nr], constants.UNCHECKED_ICON) then
         vim.cmd [[setl ma]]
         if lines[line_nr + 1] == "     󱘖 Connection Data" then
-            if string.find(lines[line_nr + 2], "DSN") then
-                for _ = 0, 3 do
-                    table.remove(lines, line_nr + 1)
-                end
-            else
-                for _ = 0, 8 do
-                    table.remove(lines, line_nr + 1)
-                end
+            for _ = 0, 8 do
+                table.remove(lines, line_nr + 1)
             end
         else
             table.insert(lines, line_nr + 1, "     󱘖 Connection Data")
@@ -128,24 +122,18 @@ function M.expand()
             end
 
             local db_const_data = engines.db[connection.engine]
-            if connection.dbname == "odbc" then
-                table.insert(lines, line_nr + 2, "       ENGINE   󰁕 " .. connection.engine)
-                table.insert(lines, line_nr + 3, "       DSN      󰁕 " .. connection.name .. " (ODBC)")
-                table.insert(lines, line_nr + 4, "")
-            else
-                table.insert(lines, line_nr + 2, "       ENGINE   󰁕 " .. connection.engine)
-                table.insert(lines, line_nr + 3, "       NAME     󰁕 " .. connection.name)
-                table.insert(lines, line_nr + 4, "       HOST     󰁕 " .. (connection.host or db_const_data.default_host))
-                table.insert(lines, line_nr + 5, "       PORT     󰁕 " .. (connection.port or db_const_data.default_port))
-                table.insert(lines, line_nr + 6, "       DB NAME  󰁕 " .. connection.dbname)
-                table.insert(lines, line_nr + 7,
-                    "       USER     󰁕 " ..
-                    (((connection.user and setup.view.show_user and connection.user) or connection.user and "********") or "-"))
-                table.insert(lines, line_nr + 8,
-                    "       PASSWORD 󰁕 " ..
-                    (((connection.password and setup.view.show_password and connection.password) or connection.password and "********") or "-"))
-                table.insert(lines, line_nr + 9, "")
-            end
+            table.insert(lines, line_nr + 2, "       ENGINE   󰁕 " .. connection.engine)
+            table.insert(lines, line_nr + 3, "       NAME     󰁕 " .. connection.name)
+            table.insert(lines, line_nr + 4, "       HOST     󰁕 " .. (connection.host or db_const_data.default_host))
+            table.insert(lines, line_nr + 5, "       PORT     󰁕 " .. (connection.port or db_const_data.default_port))
+            table.insert(lines, line_nr + 6, "       DB NAME  󰁕 " .. connection.dbname)
+            table.insert(lines, line_nr + 7,
+                "       USER     󰁕 " ..
+                (((connection.user and setup.view.show_user and connection.user) or connection.user and "********") or "-"))
+            table.insert(lines, line_nr + 8,
+                "       PASSWORD 󰁕 " ..
+                (((connection.password and setup.view.show_password and connection.password) or connection.password and "********") or "-"))
+            table.insert(lines, line_nr + 9, "")
         end
         vim.api.nvim_buf_set_lines(0, 0, -1, false, lines)
         vim.cmd [[setl noma]]

@@ -16,6 +16,7 @@ const MYSQL = "mysql"
 const MSSQL = "mssql"
 const ORACLE = "oracle"
 const POSTGRES = "postgres"
+const SQLITE = "sqlite"
 
 type Executor interface {
 	Run()
@@ -44,6 +45,8 @@ func Context(option model.Option, proto model.ProtoSQL) error {
 	case DB2:
         proto.Engine = "odbc"
 		return run(&engine.Db2{ProtoSQL: proto}, option)
+    case SQLITE:
+		return run(&engine.Sqlite{ProtoSQL: proto}, option)
 	default:
 		return errors.New("engine does not exist: " + proto.Engine)
 	}

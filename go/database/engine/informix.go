@@ -19,7 +19,7 @@ func (i *Informix) GetTables() {
 func (i *Informix) GetTableInfo() {
 	db, closer, err := i.GetDB()
 	if err != nil {
-		fmt.Printf(err.Error())
+		fmt.Print(err.Error())
 		return
 	}
 	defer closer()

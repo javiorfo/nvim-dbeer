@@ -43,7 +43,7 @@ func (m *Mongo) Run() {
 	defer cancel()
 	db, closer, err := m.getDB(ctx)
 	if err != nil {
-		fmt.Printf(err.Error())
+		fmt.Print(err.Error())
 		return
 	}
 	defer closer()
@@ -122,7 +122,7 @@ func (m *Mongo) GetTableInfo() {
 
 	db, closer, err := m.getDB(ctx)
 	if err != nil {
-		fmt.Printf(err.Error())
+		fmt.Print(err.Error())
 		return
 	}
 	defer closer()

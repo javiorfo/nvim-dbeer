@@ -21,7 +21,7 @@
 | Oracle | :heavy_check_mark: | Go | Supported operations detailed [here](#sql) |
 | PostgreSQL | :heavy_check_mark: | Go | Supported operations detailed [here](#sql) |
 | Redis | :x: | Go | Future release |
-| SQLite | :x: | Go | Future release |
+| SQLite | :heavy_check_mark: | Go | Supported operations detailed [here](#sql) |
 
 
 ## Demo
@@ -173,12 +173,17 @@ opts = {
                 password = "admin",
             },
             {
-                name = "MS-SQL 1",
+                name = "MS-SQL example",
                 engine = "mssql",
                 dbname = "db_dummy",
             },
             {
-                name = "MySQL something",
+                name = "SQLite example",
+                engine = "sqlite",
+                dbname = "/path/to/db_dummy.db", -- 'dbname' must contain the absolute path to the .db file or use ":memory:"
+            },
+            {
+                name = "MySQL example",
                 engine = "mysql", -- "mysql" also works for MariaDB 
                 dbname = "db_dummy",
                 user = "admin",
@@ -186,15 +191,15 @@ opts = {
             },
             -- IBM Informix needs ODBC connection configured (check unix ODBC docs for this)
             {
-                name = "Informix_ODBC", -- 'name' must match your DSN
+                name = "Informix example",
                 engine = "informix",
-                dbname = "odbc" -- 'dbname' must be "odbc"
+                dbname = "Informix_ODBC", -- 'dbname' must match your DSN
             },
             -- IBM DB2 needs ODBC connection configured (check unix ODBC docs for this)
             {
-                name = "DB2_ODBC", -- 'name' must match your DSN
+                name = "DB2 example",
                 engine = "db2",
-                dbname = "odbc" -- 'dbname' must be "odbc"
+                dbname = "DB2_ODBC", -- 'dbname' must match your DSN
             },
         }
     }

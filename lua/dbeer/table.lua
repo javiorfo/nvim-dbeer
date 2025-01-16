@@ -96,10 +96,9 @@ local function get_tables()
         return
     end
     local result = vim.fn.system(string.format(
-        "%s -option 2 -engine %s -conn-str \"%s\" -dbeer-log-file %s -dbname %s -log-debug %s",
+        "%s -option 2 -engine %s -conn-str \"%s\" -dbeer-log-file %s -dbname \"%s\" -log-debug %s",
         engines.db[conn.engine].executor, conn.engine,
         core.get_connection_string(), util.dbeer_log_file, conn.dbname, setup.internal.log_debug))
-
     if result ~= "" then
         util.logger:debug(result)
 

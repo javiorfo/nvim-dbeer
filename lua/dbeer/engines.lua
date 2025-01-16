@@ -87,15 +87,28 @@ return {
         informix = {
             title = "Informix",
             executor = go_executor,
+            default_port = "-",
+            default_host = "-",
             get_connection_string = function(connection)
-                return string.format("DSN=%s", connection.name)
+                return string.format("DSN=%s", connection.dbname)
             end
         },
         db2 = {
             title = "db2",
+            default_port = "-",
+            default_host = "-",
             executor = go_executor,
             get_connection_string = function(connection)
-                return string.format("DSN=%s", connection.name)
+                return string.format("DSN=%s", connection.dbname)
+            end
+        },
+        sqlite = {
+            title = "SQLite",
+            default_port = "-",
+            default_host = "-",
+            executor = go_executor,
+            get_connection_string = function(connection)
+                return connection.dbname
             end
         },
     }
