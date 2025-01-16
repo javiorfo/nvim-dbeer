@@ -136,7 +136,8 @@
 #### Configure DB connections and credentials
 - In the `setup` show above there is a section left out to be configured by the user (**connections** inside **db** table).
 - Here are some examples of different DB configurations
-- Engines possible values are: "db2", "mongo", "postgres", "oracle", "mysql", "mssql" and "informix".
+- Engines possible values are: **mongo, postgres, oracle, mysql, sqlite, mssql, db2** and **informix**.
+
 `Lazy`
 ```lua
 opts = {
