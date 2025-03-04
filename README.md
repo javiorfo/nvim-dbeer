@@ -9,19 +9,19 @@
 ## Supported Databases
 #### Databases not marked will be supported in the future
 
-| Database | Supported | Integrated by | NOTE |
+| Database | Supported | Connection | NOTE |
 | ------- | ------------- | ------ | ---- |
 | IBM DB2 | :heavy_check_mark: | ODBC | Supported operations detailed [here](#sql) |
 | IBM Informix | :heavy_check_mark: | ODBC | Supported operations detailed [here](#sql) |
-| MariaDB | :heavy_check_mark: | Go | Supported operations detailed [here](#sql) |
-| MongoDB | :heavy_check_mark: | Go | Supported operations detailed [here](#nosql) |
-| MS-SQL | :heavy_check_mark: | Go | Supported operations detailed [here](#sql) |
-| MySQL | :heavy_check_mark: | Go | Supported operations detailed [here](#sql) |
-| Neo4j | :x: | Go | Future release |
-| Oracle | :heavy_check_mark: | Go | Supported operations detailed [here](#sql) |
-| PostgreSQL | :heavy_check_mark: | Go | Supported operations detailed [here](#sql) |
-| Redis | :x: | Go | Future release |
-| SQLite | :heavy_check_mark: | Go | Supported operations detailed [here](#sql) |
+| MariaDB | :heavy_check_mark: | Built-in | Supported operations detailed [here](#sql) |
+| MongoDB | :heavy_check_mark: | Built-in | Supported operations detailed [here](#nosql) |
+| MS-SQL | :heavy_check_mark: | Built-in | Supported operations detailed [here](#sql) |
+| MySQL | :heavy_check_mark: | Built-in | Supported operations detailed [here](#sql) |
+| Neo4j | :x: | Built-in | Future release |
+| Oracle | :heavy_check_mark: | Built-in | Supported operations detailed [here](#sql) |
+| PostgreSQL | :heavy_check_mark: | Built-in | Supported operations detailed [here](#sql) |
+| Redis | :x: | Built-in | Future release |
+| SQLite | :heavy_check_mark: | Built-in | Supported operations detailed [here](#sql) |
 
 
 ## Demo
