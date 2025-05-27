@@ -90,10 +90,10 @@ func (t DBeer) Generate() {
 		table = append(table, value+"\n", line+"\n")
 	}
 
-    filePath := CreateDBeerFileFormat(t.DestFolder)
-    logger.Debugf("File path: %s", filePath)
+	filePath := CreateDBeerFileFormat(t.DestFolder)
+	logger.Debugf("File path: %s", filePath)
 	fmt.Println(highlighting(t.Headers, t.HeaderStyleLink))
-    fmt.Println(filePath)
+	fmt.Println(filePath)
 
 	WriteToFile(filePath, table...)
 }
@@ -101,15 +101,15 @@ func (t DBeer) Generate() {
 func highlighting(headers map[int]Header, style string) string {
 	result := ""
 	for k, v := range headers {
-		result += fmt.Sprintf("syn match header%d '%s' | hi link header%d %s |", k, v.Name, k, style)
+		result += fmt.Sprintf("syn match header%d '\\<%s\\>' | hi link header%d %s |", k, strings.TrimSpace(v.Name), k, style)
 	}
-    logger.Debugf("Highlight matches: %s", result)
+	logger.Debugf("Highlight matches: %s", result)
 	return result
 }
 
 func addSpaces(inputString string, length int) string {
 	result := inputString
-    lengthInputString := utf8.RuneCountInString(inputString)
+	lengthInputString := utf8.RuneCountInString(inputString)
 
 	if length > lengthInputString {
 		diff := length - lengthInputString
@@ -147,9 +147,9 @@ func WriteToFile(filePath string, values ...string) {
 }
 
 func CreateDBeerFileFormat(destFolder string) string {
-    return fmt.Sprintf("%s/%s.%s", destFolder, time.Now().Format("20060102-150405"), dbeer_extension)
+	return fmt.Sprintf("%s/%s.%s", destFolder, time.Now().Format("20060102-150405"), dbeer_extension)
 }
 
 func CreateDBeerMongoFileFormat(destFolder string) string {
-    return fmt.Sprintf("%s/%s.%s.%s", destFolder, time.Now().Format("20060102-150405"), dbeer_extension, "json")
+	return fmt.Sprintf("%s/%s.%s.%s", destFolder, time.Now().Format("20060102-150405"), dbeer_extension, "json")
 }
