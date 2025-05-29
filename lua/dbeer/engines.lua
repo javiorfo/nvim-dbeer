@@ -90,7 +90,11 @@ return {
             default_port = "-",
             default_host = "-",
             get_connection_string = function(connection)
-                return string.format("DSN=%s", connection.dbname)
+                return string.format("DSN=%s;%s%s",
+                    connection.dbname,
+                    connection.user and "UID=" .. connection.user .. ";" or "",
+                    connection.password and "PWD=" .. connection.password .. ";" or ""
+                )
             end
         },
         db2 = {
@@ -99,7 +103,11 @@ return {
             default_host = "-",
             executor = go_executor,
             get_connection_string = function(connection)
-                return string.format("DSN=%s", connection.dbname)
+                return string.format("DSN=%s;%s%s",
+                    connection.dbname,
+                    connection.user and "UID=" .. connection.user .. ";" or "",
+                    connection.password and "PWD=" .. connection.password .. ";" or ""
+                )
             end
         },
         sqlite = {

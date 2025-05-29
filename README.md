@@ -207,6 +207,8 @@ opts = {
                 name = "Informix example",
                 engine = "informix",
                 dbname = "Informix_ODBC", -- 'dbname' must match your DSN
+                user = "some-user",
+                password = "1234",
             },
             -- IBM DB2 needs ODBC connection configured (check unix ODBC docs for this)
             {
