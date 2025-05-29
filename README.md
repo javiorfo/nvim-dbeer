@@ -78,6 +78,18 @@
             
             -- Keymap in Normal mode to close all buffer results
             close = '<C-c>',
+
+            -- Keymap in Normal mode to scroll left dbeer query results
+            scroll_left = '<C-h>',
+
+            -- Keymap in Normal mode to scroll right dbeer query results
+            scroll_rigth = '<C-l>',
+
+            -- Keymap in Normal mode to scroll down dbeer query results
+            scroll_down = '<C-j>',
+
+            -- Keymap in Normal mode to scroll up dbeer query results
+            scroll_up = '<C-k>',
         },
 
         -- Command :DBeerDB

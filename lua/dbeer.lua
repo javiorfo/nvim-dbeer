@@ -8,6 +8,10 @@ M.SETTINGS = {
         expand_db = '<C-space>',
         execute = '<C-t>',
         close = '<C-c>',
+        scroll_left = '<C-h>',
+        scroll_rigth = '<C-l>',
+        scroll_down = '<C-j>',
+        scroll_up = '<C-k>',
     },
     view = {
         show_user = true,
@@ -56,6 +60,22 @@ function M.setup(opts)
         if commands.close then
             M.SETTINGS.commands.close = (type(commands.close) == "string" and commands.close) or
                 M.SETTINGS.commands.close
+        end
+        if commands.scroll_left then
+            M.SETTINGS.commands.scroll_left = (type(commands.scroll_left) == "string" and commands.scroll_left) or
+                M.SETTINGS.commands.scroll_left
+        end
+        if commands.scroll_right then
+            M.SETTINGS.commands.scroll_right = (type(commands.scroll_right) == "string" and commands.scroll_right) or
+                M.SETTINGS.commands.scroll_right
+        end
+        if commands.scroll_down then
+            M.SETTINGS.commands.scroll_down = (type(commands.scroll_down) == "string" and commands.scroll_down) or
+                M.SETTINGS.commands.scroll_down
+        end
+        if commands.scroll_up then
+            M.SETTINGS.commands.scroll_up = (type(commands.scroll_up) == "string" and commands.scroll_up) or
+                M.SETTINGS.commands.scroll_up
         end
     end
     if opts.view then
@@ -157,6 +177,17 @@ function M.setup(opts)
                 local connection = db.connections[require 'dbeer'.default_db]
                 map_or_unmap(connection, connection.engine ~= "mongo")
             end
+        end,
+    })
+
+    vim.api.nvim_create_autocmd("BufEnter", {
+        pattern = "*.dbeer",
+        callback = function()
+            vim.api.nvim_buf_set_keymap(0, "n", M.SETTINGS.commands.scroll_left, "zH", { noremap = true, silent = true })
+            vim.api.nvim_buf_set_keymap(0, "n", M.SETTINGS.commands.scroll_rigth, "zL", { noremap = true, silent = true })
+            vim.api.nvim_buf_set_keymap(0, "n", M.SETTINGS.commands.scroll_down, "<C-e>",
+                { noremap = true, silent = true })
+            vim.api.nvim_buf_set_keymap(0, "n", M.SETTINGS.commands.scroll_up, "<C-y>", { noremap = true, silent = true })
         end,
     })
 end
