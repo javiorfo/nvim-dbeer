@@ -1,7 +1,7 @@
 use chrono::Local;
 
 use super::border::BorderStyle;
-use crate::{dbeer_debug, dbeer_error};
+use crate::{dbeer, dbeer_debug};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufWriter, Write};
@@ -10,6 +10,22 @@ use std::io::{BufWriter, Write};
 pub struct Header {
     pub name: String,
     pub length: usize,
+}
+
+impl Header {
+    pub fn row_counter() -> Self {
+        Self {
+            name: "  ".to_string(),
+            length: 4,
+        }
+    }
+
+    pub fn new(name: &str) -> Self {
+        Header {
+            name: format!(" {}", name.to_uppercase()),
+            length: name.len() + 2,
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -34,7 +50,7 @@ impl Table {
         }
     }
 
-    pub fn generate(&self) {
+    pub fn generate(&self) -> dbeer::Result {
         let border = self.border_style.get();
 
         // header
@@ -101,7 +117,9 @@ impl Table {
         println!("{}", Self::hi(&self.headers, &self.header_style_link));
         println!("{filepath}");
 
-        Self::write_to_file(&filepath, &table);
+        Self::write_to_file(&filepath, &table)?;
+
+        Ok(())
     }
 
     fn add_spaces(input_string: &str, len: usize) -> String {
@@ -116,20 +134,20 @@ impl Table {
         result
     }
 
-    fn write_to_file(filepath: &str, strings: &[String]) {
-        if let Err(e) = File::create(filepath).and_then(|file| {
-            let mut writer = BufWriter::new(file);
+    fn write_to_file(filepath: &str, strings: &[String]) -> dbeer::Result {
+        let file = File::create(filepath).map_err(dbeer::Error::Io)?;
+        let mut writer = BufWriter::new(file);
 
-            for v in strings {
-                let line = format!("{}\n", v);
-                writer.write_all(line.as_bytes())?;
-            }
-
-            writer.flush()
-        }) {
-            dbeer_error!("Error writing to file {} {:?}", filepath, e);
-            println!("[ERROR] {:?}", e);
+        for v in strings {
+            let line = format!("{}\n", v);
+            writer
+                .write_all(line.as_bytes())
+                .map_err(dbeer::Error::Io)?;
         }
+
+        writer.flush().map_err(dbeer::Error::Io)?;
+
+        Ok(())
     }
 
     fn hi(headers: &HashMap<usize, Header>, style: &str) -> String {

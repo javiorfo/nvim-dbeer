@@ -37,7 +37,10 @@ impl Logger {
 
 static LOGGER: LazyLock<Mutex<Option<Logger>>> = LazyLock::new(|| Mutex::new(None));
 
-pub fn logger_init<P: AsRef<Path>>(log_file_name: P, log_debug_enabled: bool) -> std::io::Result<()> {
+pub fn logger_init<P: AsRef<Path>>(
+    log_file_name: P,
+    log_debug_enabled: bool,
+) -> std::io::Result<()> {
     let logger = Logger::new(log_file_name.as_ref().to_str().unwrap(), log_debug_enabled)?;
     let mut global_logger = LOGGER.lock().unwrap();
     *global_logger = Some(logger);

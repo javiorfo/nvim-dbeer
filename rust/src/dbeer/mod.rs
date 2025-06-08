@@ -1,10 +1,11 @@
 mod border;
 pub mod command;
+pub mod dispatch;
 pub mod engine;
+mod error;
+pub mod logger;
 pub mod query;
 pub mod table;
-pub mod logger;
-pub mod dispatch;
-pub mod error;
 
 pub use border::*;
+pub use error::*;

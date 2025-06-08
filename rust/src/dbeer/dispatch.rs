@@ -1,18 +1,19 @@
 use super::command::Action;
-use crate::dbeer::{command::Command, engine::Postgres, error::Result, query::is_select_query, table::Table};
+use crate::dbeer::{
+    self, command::Command, engine::Postgres, query::is_select_query, table::Table,
+};
 
 pub trait Runner {
-    fn connect(&self) -> Result;
-    fn execute(&self) -> Result;
-    fn select(&mut self, table: &mut Table) -> Result;
-    fn get_tables(&self) -> Result;
-    fn get_table_info(&self, table: &mut Table) -> Result;
+    fn select(&mut self, table: &mut Table) -> dbeer::Result;
+    fn execute(&self) -> dbeer::Result;
+    fn get_tables(&self) -> dbeer::Result;
+    fn get_table_info(&self, table: &mut Table) -> dbeer::Result;
 }
 
-pub fn context(command: Command) -> Result {
+pub fn context(command: Command) -> dbeer::Result {
     let engine: &mut dyn Runner = &mut match command.engine.as_str() {
-        "postgres" => Postgres::new(&command.conn_str, &command.queries)?,
-        _ => unreachable!(),
+        "postgres" => Postgres::connect(&command.conn_str, &command.queries)?,
+        _ => return Err(dbeer::Error::Msg("".to_string())),
     };
 
     match command.action {

@@ -13,7 +13,7 @@ pub struct Border {
     pub vertical_right: &'static str,
 }
 
-#[derive(Debug,Default)]
+#[derive(Debug, Default)]
 pub enum BorderStyle {
     #[default]
     Default,
@@ -31,7 +31,7 @@ impl From<String> for BorderStyle {
             "3" => BorderStyle::Rounded,
             "4" => BorderStyle::Double,
             "5" => BorderStyle::SimpleDouble,
-            _ => unreachable!()
+            _ => unreachable!(),
         }
     }
 }

@@ -1,28 +1,28 @@
 #[derive(Debug)]
-pub enum DBeerError {
+pub enum Error {
     Io(std::io::Error),
     Postgres(postgres::Error),
-    Custom(String),
+    Msg(String),
 }
 
-pub type Result<T = ()> = std::result::Result<T, DBeerError>;
+pub type Result<T = ()> = std::result::Result<T, Error>;
 
-impl std::fmt::Display for DBeerError {
+impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            DBeerError::Io(e) => write!(f, "IO error: {}", e),
-            DBeerError::Postgres(e) => write!(f, "Postgres error: {}", e),
-            DBeerError::Custom(e) => write!(f, "{}", e),
+            Error::Io(e) => write!(f, "IO error => {}", e),
+            Error::Postgres(e) => write!(f, "Postgres error => {}", e),
+            Error::Msg(e) => write!(f, "{}", e),
         }
     }
 }
 
-impl std::error::Error for DBeerError {
+impl std::error::Error for Error {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
-            DBeerError::Io(e) => Some(e),
-            DBeerError::Postgres(e) => Some(e),
-            DBeerError::Custom(_) => None,
+            Error::Io(e) => Some(e),
+            Error::Postgres(e) => Some(e),
+            Error::Msg(_) => None,
         }
     }
 }

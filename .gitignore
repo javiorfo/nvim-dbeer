@@ -1,13 +1,9 @@
 # docs
 tags
 
-# Go
+# Binary
 /bin/
 
-# Java
-/java/target/
-/java/.classpath
-/java/.settings
-/java/.project
-/java/.factorypath
+# Rust
+/rust/target/
 
