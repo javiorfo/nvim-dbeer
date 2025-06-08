@@ -2,7 +2,7 @@ use std::env;
 
 use crate::dbeer::{
     command::Command,
-    dispatch::context,
+    dispatch::{EngineType, context},
     logger::{debug, error, logger_init},
 };
 mod dbeer;
@@ -36,7 +36,8 @@ fn main() {
     dbeer_debug!("Debug enabled!");
     dbeer_debug!("Parsed params: {:#?}", command);
 
-    if let Err(e) = context(command) {
+    let engine_type = command.engine.clone();
+    if let Err(e) = context(command, EngineType::new(&engine_type)) {
         let error_msg = format!("[ERROR] {}", e);
         println!("{error_msg}");
         dbeer_error!("{error_msg}");
