@@ -171,6 +171,7 @@ name = "dbeer"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "odbc",
  "postgres",
  "regex",
 ]
@@ -184,6 +185,21 @@ dependencies = [
  "block-buffer",
  "crypto-common",
  "subtle",
+]
+
+[[package]]
+name = "doc-comment"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fea41bba32d969b513997752735605054bc0dfa92b4c56bf1189f2e174be7a10"
+
+[[package]]
+name = "encoding_rs"
+version = "0.8.35"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "75030f3c4f45dafd7586dd6780965a8c7e8e285a5ecb86713e63a79c5b2766f3"
+dependencies = [
+ "cfg-if",
 ]
 
 [[package]]
@@ -392,6 +408,34 @@ checksum = "62948e14d923ea95ea2c7c86c71013138b66525b86bdc08d2dcc262bdb497b87"
 dependencies = [
  "memchr",
 ]
+
+[[package]]
+name = "odbc"
+version = "0.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1a2056ebb920918e743ccd0ceb6bc9d8e02e4d0d48c28550d1887e7490f6f298"
+dependencies = [
+ "doc-comment",
+ "encoding_rs",
+ "log",
+ "odbc-safe",
+ "odbc-sys",
+]
+
+[[package]]
+name = "odbc-safe"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f45de02ae2d07b38a7ef0e64139d971b1590d834c2ec089132d0eb49678e7e5a"
+dependencies = [
+ "odbc-sys",
+]
+
+[[package]]
+name = "odbc-sys"
+version = "0.8.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dec5c5490e13c423d25508b13cd2cc432490043f5ed5b46b61a75857642f4f37"
 
 [[package]]
 name = "once_cell"

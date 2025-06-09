@@ -1,63 +1,53 @@
 use super::command::Action;
 use crate::dbeer::{
-    self, command::Command, engine::Postgres, query::is_select_query, table::Table,
+    self,
+    command::Command,
+    engine::{Postgres, SqlExecutor, Type},
+    query::{is_select_query, strip_sql_comments},
+    table::Table,
 };
 
-pub trait SqlExecutor {
-    fn select(&mut self, table: &mut Table) -> dbeer::Result;
-    fn execute(&self) -> dbeer::Result;
-    fn get_tables(&self) -> dbeer::Result;
-    fn get_table_info(&self, table_name: &str) -> String;
-}
-
-pub trait NoSqlExecutor {}
-
-pub fn context(command: Command, engine_type: EngineType) -> dbeer::Result {
+pub fn process(command: Command, engine_type: Type) -> dbeer::Result {
     match engine_type {
-        EngineType::Sql => {
+        Type::Sql => {
+            let queries = strip_sql_comments(&command.queries);
+
             let engine: &mut dyn SqlExecutor = &mut match command.engine.as_str() {
-                "postgres" => Postgres::connect(&command.conn_str, &command.queries)?,
-                _ => return Err(dbeer::Error::Msg("".to_string())),
+                "postgres" => Postgres::connect(&command.conn_str, &queries)?,
+                not_supported => {
+                    return Err(dbeer::Error::Msg(format!(
+                        "Engine {} is not supported",
+                        not_supported
+                    )));
+                }
             };
 
             match command.action {
                 Action::Run => {
-                    if is_select_query(&command.queries) {
-                        engine.select(&mut Table::new(
-                            command.dest_folder,
-                            command.header_style_link,
-                            command.border_style,
-                        ))?;
+                    let table = &mut Table::new(
+                        command.dest_folder,
+                        command.header_style_link,
+                        command.border_style,
+                    );
+
+                    if is_select_query(&queries) {
+                        engine.select(table)?;
                     } else {
-                        engine.execute()?;
+                        engine.execute(table)?;
                     }
                 }
-                Action::Tables => todo!(),
-                Action::TableInfo => todo!(),
+                Action::Tables => engine.tables()?,
+                Action::TableInfo => engine.table_info(&mut Table::new(
+                    command.dest_folder,
+                    command.header_style_link,
+                    command.border_style,
+                ))?,
             }
         }
-        EngineType::NoSql => todo!(),
-        EngineType::Graph => todo!(),
-        EngineType::KeyValue => todo!(),
+        Type::Mongo => return Err(dbeer::Error::Msg("Mongo not implemented yet".to_string())),
+        Type::Neo4j => return Err(dbeer::Error::Msg("Neo4j not implemented yet".to_string())),
+        Type::Redis => return Err(dbeer::Error::Msg("Redis not implemented yet".to_string())),
     }
 
     Ok(())
-}
-
-pub enum EngineType {
-    Sql,
-    NoSql,
-    Graph,
-    KeyValue,
-}
-
-impl EngineType {
-    pub fn new(engine: &str) -> EngineType {
-        match engine {
-            "mongo" => EngineType::NoSql,
-            "neo4j" => EngineType::Graph,
-            "redis" => EngineType::KeyValue,
-            _ => EngineType::Sql,
-        }
-    }
 }

@@ -28,7 +28,7 @@ impl Header {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Table {
     pub dest_folder: String,
     pub header_style_link: String,
@@ -45,8 +45,7 @@ impl Table {
             dest_folder,
             header_style_link,
             border_style,
-            headers: HashMap::new(),
-            rows: Vec::new(),
+            ..Table::default()
         }
     }
 
@@ -112,12 +111,12 @@ impl Table {
             table.push(line);
         }
 
-        let filepath = Self::create_dbeer_file_format(&self.dest_folder);
+        let filepath = self.create_dbeer_file_format();
         dbeer_debug!("File path: {}", filepath);
         println!("{}", Self::hi(&self.headers, &self.header_style_link));
         println!("{filepath}");
 
-        Self::write_to_file(&filepath, &table)?;
+        self.write_to_file(&filepath, &table)?;
 
         Ok(())
     }
@@ -134,7 +133,7 @@ impl Table {
         result
     }
 
-    fn write_to_file(filepath: &str, strings: &[String]) -> dbeer::Result {
+    pub fn write_to_file(&self, filepath: &str, strings: &[String]) -> dbeer::Result {
         let file = File::create(filepath).map_err(dbeer::Error::Io)?;
         let mut writer = BufWriter::new(file);
 
@@ -169,12 +168,17 @@ impl Table {
         matches
     }
 
-    fn create_dbeer_file_format(dest_folder: &str) -> String {
+    pub fn create_dbeer_file_format(&self) -> String {
         let timestamp = Local::now().format("%Y%m%d-%H%M%S").to_string();
-        format!("{}/{}.{}", dest_folder, timestamp, Self::DBEER_EXTENSION)
+        format!(
+            "{}/{}.{}",
+            self.dest_folder,
+            timestamp,
+            Self::DBEER_EXTENSION
+        )
     }
 
-    fn create_dbeer_mongo_file_format(dest_folder: &str) -> String {
+    fn _create_dbeer_mongo_file_format(dest_folder: &str) -> String {
         let timestamp = Local::now().format("%Y%m%d-%H%M%S").to_string();
         format!(
             "{}/{}.{}.{}",

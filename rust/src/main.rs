@@ -2,7 +2,7 @@ use std::env;
 
 use crate::dbeer::{
     command::Command,
-    dispatch::{EngineType, context},
+    dispatch::process,
     logger::{debug, error, logger_init},
 };
 mod dbeer;
@@ -23,7 +23,7 @@ fn main() {
             "-border-style" => command.border_style = args[i + 1].clone().into(),
             "-dest-folder" => command.dest_folder = args[i + 1].clone(),
             "-dbeer-log-file" => dbeer_log_file = args[i + 1].clone(),
-            "-action" => command.action = args[i + 1].clone().into(),
+            "-option" => command.action = args[i + 1].clone().into(), // TODO action in Lua
             "-header-style-link" => command.header_style_link = args[i + 1].clone(),
             "-log-debug" => log_debug = args[i + 1].clone().parse().unwrap_or(log_debug),
             _ => break,
@@ -34,10 +34,10 @@ fn main() {
     logger_init(&dbeer_log_file, log_debug).expect("Logger init failed!");
 
     dbeer_debug!("Debug enabled!");
-    dbeer_debug!("Parsed params: {:#?}", command);
+    dbeer_debug!("Parsed params: {command:#?}");
 
     let engine_type = command.engine.clone();
-    if let Err(e) = context(command, EngineType::new(&engine_type)) {
+    if let Err(e) = process(command, engine_type.into()) {
         let error_msg = format!("[ERROR] {}", e);
         println!("{error_msg}");
         dbeer_error!("{error_msg}");

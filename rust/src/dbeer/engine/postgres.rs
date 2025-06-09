@@ -8,21 +8,21 @@ use postgres::{
 use crate::{
     dbeer::{
         self,
-        dispatch::SqlExecutor,
+        query::{is_insert_update_or_delete, split_queries},
         table::{Header, Table},
     },
     dbeer_debug,
 };
 
-pub struct Postgres<'a> {
+pub struct Postgres {
     client: Client,
-    queries: &'a str,
+    queries: String,
 }
 
-impl<'a> Postgres<'a> {
-    pub fn connect(conn_str: &'a str, queries: &'a str) -> dbeer::Result<Postgres<'a>> {
+impl Postgres {
+    pub fn connect(conn_str: &str, queries: &str) -> dbeer::Result<Postgres> {
         Ok(Self {
-            queries,
+            queries: queries.to_string(),
             client: Client::connect(conn_str, NoTls).map_err(|_| {
                 dbeer::Error::Msg(format!(
                     "Error connecting Postgres. Connection string: {}",
@@ -31,14 +31,59 @@ impl<'a> Postgres<'a> {
             })?,
         })
     }
+
+    fn row_to_string(row: &Row) -> Vec<String> {
+        let mut result = Vec::new();
+
+        for (i, column) in row.columns().iter().enumerate() {
+            let value = match *column.type_() {
+                Type::BOOL => Self::value_or_null::<bool>(row, i),
+                Type::INT2 => Self::value_or_null::<i16>(row, i),
+                Type::INT4 => Self::value_or_null::<i32>(row, i),
+                Type::INT8 => Self::value_or_null::<i64>(row, i),
+                Type::FLOAT4 => Self::value_or_null::<f32>(row, i),
+                Type::FLOAT8 => Self::value_or_null::<f64>(row, i),
+                Type::TEXT | Type::VARCHAR | Type::BPCHAR => Self::value_or_null::<&str>(row, i),
+                Type::DATE => Self::value_or_null::<chrono::NaiveDate>(row, i),
+                Type::TIMESTAMP => Self::value_or_null::<chrono::NaiveDateTime>(row, i),
+                Type::TIMESTAMPTZ => Self::value_or_null::<chrono::DateTime<chrono::Utc>>(row, i),
+                Type::INT4_ARRAY => match row.try_get::<_, Option<Vec<i32>>>(i).ok().flatten() {
+                    Some(arr) => format!("{:?}", arr),
+                    None => "NULL".to_string(),
+                },
+                ref unknown_type => {
+                    dbeer_debug!("Postgres unknown type: {unknown_type}");
+                    "UNKNOWN TYPE".to_string()
+                }
+            };
+            result.push(value);
+        }
+
+        result
+    }
+
+    fn value_or_null<'a, T>(row: &'a Row, i: usize) -> String
+    where
+        T: ToString + FromSql<'a>,
+    {
+        row.try_get::<_, Option<T>>(i)
+            .ok()
+            .flatten()
+            .map_or(String::from("NULL"), |v| v.to_string())
+    }
 }
 
-impl SqlExecutor for Postgres<'_> {
+impl super::SqlExecutor for Postgres {
     fn select(&mut self, table: &mut Table) -> dbeer::Result {
         let results = self
             .client
-            .query(self.queries, &[])
+            .query(&self.queries, &[])
             .map_err(dbeer::Error::Postgres)?;
+
+        if results.is_empty() {
+            println!("  Query has returned 0 results.");
+            return Ok(());
+        }
 
         let mut headers: HashMap<_, _> = results
             .first()
@@ -53,15 +98,21 @@ impl SqlExecutor for Postgres<'_> {
 
         let mut rows: Vec<Vec<String>> = Vec::new();
         for (i, row) in results.iter().enumerate() {
-            let string_values = row_to_string(row);
+            let string_values = Self::row_to_string(row);
 
             let mut columns = Vec::with_capacity(headers.len());
-            columns.push(format!(" #{}", i + 1));
+            let id_column = format!(" #{}", i + 1);
+            let id_column_length = id_column.len() + 1;
+            columns.push(id_column);
+            let column_counter = headers.get_mut(&1).unwrap();
+            if column_counter.length < id_column_length {
+                column_counter.length = id_column_length;
+            }
 
             for (column_index, value) in string_values.iter().enumerate() {
                 columns.push(format!(" {}", value));
                 let column = headers.get_mut(&(column_index + 2)).unwrap();
-                let length = value.len() + 2;
+                let length = value.chars().count() + 2;
                 if column.length < length {
                     column.length = length;
                 }
@@ -72,25 +123,79 @@ impl SqlExecutor for Postgres<'_> {
         table.headers = headers;
         table.rows = rows;
 
-        if table.rows.is_empty() {
-            println!("  Query has returned 0 results.");
-        } else {
-            dbeer_debug!("Generating dbeer table...");
-            table.generate()?;
+        dbeer_debug!("Generating dbeer table...");
+        table.generate()?;
+
+        Ok(())
+    }
+
+    fn execute(&mut self, table: &mut Table) -> dbeer::Result {
+        let queries = split_queries(&self.queries);
+
+        if queries.len() == 1 {
+            let query = queries[0];
+            let result = self
+                .client
+                .execute(query, &[])
+                .map_err(dbeer::Error::Postgres)?;
+
+            if is_insert_update_or_delete(query) {
+                println!("  Row(s) affected: {result}");
+            } else {
+                println!("  Statement executed correctly.");
+            }
+            return Ok(());
         }
 
+        let mut results = Vec::new();
+        for (i, &query) in queries.iter().enumerate() {
+            let msg = match self.client.execute(query, &[]) {
+                Ok(affected) => {
+                    if is_insert_update_or_delete(query) {
+                        format!("{})   Row(s) affected: {}", i + 1, affected)
+                    } else {
+                        format!("{})   Statement executed correctly.", i + 1)
+                    }
+                }
+                Err(e) => format!("{})   {}", i + 1, e),
+            };
+            results.push(msg);
+        }
+
+        let filepath = table.create_dbeer_file_format();
+        println!("syn match dbeerStmtErr ' ' | hi link dbeerStmtErr ErrorMsg");
+        println!("{filepath}");
+        table.write_to_file(&filepath, &results)?;
+
         Ok(())
     }
 
-    fn execute(&self) -> dbeer::Result {
-        todo!()
-    }
+    fn tables(&mut self) -> dbeer::Result {
+        let table_names = self
+            .client
+            .query("select table_name from information_schema.tables where table_schema = 'public' order by table_name", &[])
+            .map_err(dbeer::Error::Postgres)?
+            .iter()
+            .map(|row| {
+                let name: String = row.get("table_name");
+                name.to_uppercase()
+            })
+            .collect::<Vec<_>>().join(" ");
 
-    fn get_tables(&self) -> dbeer::Result {
+        dbeer_debug!("Table names: {table_names}");
+        println!("[{table_names}]");
+
         Ok(())
     }
 
-    fn get_table_info(&self, table_name: &str) -> String {
+    fn table_info(&mut self, table: &mut Table) -> dbeer::Result {
+        self.queries = self.table_info_query();
+        dbeer_debug!("Table info query: {}", self.queries);
+        self.select(table)?;
+        Ok(())
+    }
+
+    fn table_info_query(&self) -> String {
         format!(
             r#"SELECT 
                 UPPER(c.column_name) AS column_name,
@@ -134,44 +239,7 @@ impl SqlExecutor for Postgres<'_> {
                     AND rc.unique_constraint_schema = kcu2.table_schema
                 WHERE 
                     c.table_name = '{}'"#,
-            table_name
+            self.queries
         )
     }
-}
-
-fn row_to_string(row: &Row) -> Vec<String> {
-    let mut result = Vec::new();
-
-    for (i, column) in row.columns().iter().enumerate() {
-        let value = match *column.type_() {
-            Type::BOOL => value_or_null::<bool>(row, i),
-            Type::INT2 => value_or_null::<i16>(row, i),
-            Type::INT4 => value_or_null::<i32>(row, i),
-            Type::INT8 => value_or_null::<i64>(row, i),
-            Type::FLOAT4 => value_or_null::<f32>(row, i),
-            Type::FLOAT8 => value_or_null::<f64>(row, i),
-            Type::TEXT | Type::VARCHAR | Type::BPCHAR => value_or_null::<&str>(row, i),
-            Type::DATE => value_or_null::<chrono::NaiveDate>(row, i),
-            Type::TIMESTAMP => value_or_null::<chrono::NaiveDateTime>(row, i),
-            Type::TIMESTAMPTZ => value_or_null::<chrono::DateTime<chrono::Utc>>(row, i),
-            Type::INT4_ARRAY => match row.try_get::<_, Option<Vec<i32>>>(i).ok().flatten() {
-                Some(arr) => format!("{:?}", arr),
-                None => "NULL".to_string(),
-            },
-            _ => "UNKNOWN TYPE".to_string(),
-        };
-        result.push(value);
-    }
-
-    result
-}
-
-fn value_or_null<'a, T>(row: &'a Row, i: usize) -> String
-where
-    T: ToString + FromSql<'a>,
-{
-    row.try_get::<_, Option<T>>(i)
-        .ok()
-        .flatten()
-        .map_or(String::from("NULL"), |v| v.to_string())
 }
