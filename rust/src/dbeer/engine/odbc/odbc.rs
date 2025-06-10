@@ -54,7 +54,7 @@ impl SqlExecutor for Odbc {
 
                 for i in 1..=columns_len {
                     headers.insert(
-                        (i + 2) as usize,
+                        (i + 1) as usize,
                         Header::new(
                             &stmt
                                 .describe_col(i as u16)
@@ -91,7 +91,7 @@ impl SqlExecutor for Odbc {
                             "NULL"
                         };
 
-                        let column = headers.get_mut(&(i as usize + 2)).unwrap();
+                        let column = headers.get_mut(&(i as usize + 1)).unwrap();
                         let length = value.chars().count() + 2;
                         if column.length < length {
                             column.length = length;
@@ -197,7 +197,7 @@ impl SqlExecutor for Odbc {
                         .get_data::<&str>(i as u16)
                         .map_err(dbeer::Error::Odbc)?
                     {
-                        table_names.push_str(&format!("{} ", value));
+                        table_names.push_str(&format!("{} ", value.to_uppercase()));
                     }
                 }
             }
