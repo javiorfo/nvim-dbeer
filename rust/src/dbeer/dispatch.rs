@@ -2,7 +2,7 @@ use super::command::Action;
 use crate::dbeer::{
     self,
     command::Command,
-    engine::{Informix, MySql, Postgres, SqlExecutor, Type},
+    engine::{Db2, Informix, MsSql, MySql, Oracle, Postgres, SqlExecutor, Type},
     query::{is_select_query, strip_sql_comments},
     table::Table,
 };
@@ -21,6 +21,9 @@ pub fn process(command: Command, engine_type: Type) -> dbeer::Result {
                     &command.db_name,
                 )?),
                 "informix" => Box::new(Informix::connect(&command.conn_str, &queries)?),
+                "mssql" => Box::new(MsSql::connect(&command.conn_str, &queries)?),
+                "oracle" => Box::new(Oracle::connect(&command.conn_str, &queries)?),
+                "db2" => Box::new(Db2::connect(&command.conn_str, &queries)?),
                 not_supported => {
                     return Err(dbeer::Error::Msg(format!(
                         "Engine {} is not supported",

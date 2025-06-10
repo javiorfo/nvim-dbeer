@@ -1,12 +1,18 @@
+mod db2;
 mod informix;
 mod mongo;
+mod mssql;
 mod mysql;
 mod neo4j;
 pub mod odbc;
+mod oracle;
 mod postgres;
 
+pub use db2::Db2;
 pub use informix::Informix;
+pub use mssql::MsSql;
 pub use mysql::MySql;
+pub use oracle::Oracle;
 pub use postgres::Postgres;
 
 use crate::dbeer::{self, table::Table};
