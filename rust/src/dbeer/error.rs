@@ -1,4 +1,5 @@
 #[derive(Debug)]
+#[allow(clippy::large_enum_variant)]
 pub enum Error {
     Io(std::io::Error),
     Postgres(postgres::Error),
@@ -15,7 +16,11 @@ impl std::fmt::Display for Error {
             Error::Io(e) => write!(f, "IO error => {}", e),
             Error::Postgres(e) => write!(f, "Postgres error => {}", e),
             Error::MySql(e) => write!(f, "MySql error => {}", e),
-            Error::Odbc(e) => write!(f, "Odbc error => {}", e),
+            Error::Odbc(e) => write!(
+                f,
+                "Odbc error => {}",
+                std::str::from_utf8(e.get_raw_message()).unwrap_or("No info available")
+            ),
             Error::Msg(e) => write!(f, "{}", e),
         }
     }

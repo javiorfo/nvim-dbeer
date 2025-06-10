@@ -17,6 +17,7 @@ pub struct MySql {
 }
 
 impl MySql {
+    #[allow(clippy::result_large_err)]
     pub fn connect(conn_str: &str, queries: &str, db_name: &str) -> dbeer::Result<Self> {
         let pool = Pool::new(conn_str).map_err(dbeer::Error::MySql)?;
 

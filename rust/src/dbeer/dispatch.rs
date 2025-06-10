@@ -7,6 +7,7 @@ use crate::dbeer::{
     table::Table,
 };
 
+#[allow(clippy::result_large_err)]
 pub fn process(command: Command, engine_type: Type) -> dbeer::Result {
     match engine_type {
         Type::Sql => {

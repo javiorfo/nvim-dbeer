@@ -19,6 +19,7 @@ pub struct Postgres {
 }
 
 impl Postgres {
+    #[allow(clippy::result_large_err)]
     pub fn connect(conn_str: &str, queries: &str) -> dbeer::Result<Self> {
         Ok(Self {
             queries: queries.to_string(),

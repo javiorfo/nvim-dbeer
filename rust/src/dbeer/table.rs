@@ -49,6 +49,7 @@ impl Table {
         }
     }
 
+    #[allow(clippy::result_large_err)]
     pub fn generate(&self) -> dbeer::Result {
         let border = self.border_style.get();
 
@@ -133,6 +134,7 @@ impl Table {
         result
     }
 
+    #[allow(clippy::result_large_err)]
     pub fn write_to_file(&self, filepath: &str, strings: &[String]) -> dbeer::Result {
         let file = File::create(filepath).map_err(dbeer::Error::Io)?;
         let mut writer = BufWriter::new(file);

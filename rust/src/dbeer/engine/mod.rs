@@ -30,10 +30,18 @@ impl From<String> for Type {
 }
 
 pub trait SqlExecutor {
+    #[allow(clippy::result_large_err)]
     fn select(&mut self, table: &mut Table) -> dbeer::Result;
+
+    #[allow(clippy::result_large_err)]
     fn execute(&mut self, table: &mut Table) -> dbeer::Result;
+
+    #[allow(clippy::result_large_err)]
     fn tables(&mut self) -> dbeer::Result;
+
+    #[allow(clippy::result_large_err)]
     fn table_info(&mut self, table: &mut Table) -> dbeer::Result;
+
     fn table_info_query(&self) -> String;
 }
 

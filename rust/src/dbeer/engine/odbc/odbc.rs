@@ -7,7 +7,11 @@ use odbc::{
 };
 
 use crate::{
-    dbeer::{self, Header, Table, engine::SqlExecutor},
+    dbeer::{
+        self, Header, Table,
+        engine::SqlExecutor,
+        query::{is_insert_update_or_delete, split_queries},
+    },
     dbeer_debug,
 };
 
@@ -18,6 +22,7 @@ pub struct Odbc {
 }
 
 impl Odbc {
+    #[allow(clippy::result_large_err)]
     pub fn new(conn_str: &str, queries: &str) -> dbeer::Result<Self> {
         let environment = create_environment_v3().map_err(|e| dbeer::Error::Odbc(e.unwrap()))?;
         Ok(Self {
@@ -54,7 +59,8 @@ impl SqlExecutor for Odbc {
                             &stmt
                                 .describe_col(i as u16)
                                 .map_err(dbeer::Error::Odbc)?
-                                .name,
+                                .name
+                                .to_uppercase(),
                         ),
                     );
                 }
@@ -74,18 +80,15 @@ impl SqlExecutor for Odbc {
                     col_counter += 1;
 
                     for i in 1..=columns_len {
-                        let value = match cursor
-                            .get_data::<String>(i as u16)
+                        let value = if let Some(value) = cursor
+                            .get_data::<&str>(i as u16)
                             .map_err(dbeer::Error::Odbc)?
                         {
-                            Some(value) => {
-                                columns.push(format!(" {}", value));
-                                value
-                            }
-                            None => {
-                                columns.push(" NULL".to_string());
-                                "NULL".to_string()
-                            }
+                            columns.push(format!(" {}", value));
+                            value
+                        } else {
+                            columns.push(" NULL".to_string());
+                            "NULL"
                         };
 
                         let column = headers.get_mut(&(i as usize + 2)).unwrap();
@@ -113,11 +116,97 @@ impl SqlExecutor for Odbc {
     }
 
     fn execute(&mut self, table: &mut Table) -> dbeer::Result {
-        todo!()
+        let queries = split_queries(&self.queries);
+
+        if queries.len() == 1 {
+            let query = queries[0];
+            let connection = self
+                .environment
+                .connect_with_connection_string(&self.conn_str)
+                .map_err(dbeer::Error::Odbc)?;
+
+            let stmt = Statement::with_parent(&connection).map_err(dbeer::Error::Odbc)?;
+            let affected_rows = match stmt
+                .exec_direct(&self.queries)
+                .map_err(dbeer::Error::Odbc)?
+            {
+                Data(stmt) => stmt.affected_row_count().map_err(dbeer::Error::Odbc)?,
+                NoData(stmt) => stmt.affected_row_count().map_err(dbeer::Error::Odbc)?,
+            };
+
+            if is_insert_update_or_delete(query) {
+                println!("  Row(s) affected: {}", affected_rows);
+            } else {
+                println!("  Statement executed correctly.");
+            }
+            return Ok(());
+        }
+
+        let mut results = Vec::new();
+        for (i, &query) in queries.iter().enumerate() {
+            let connection = self
+                .environment
+                .connect_with_connection_string(&self.conn_str)
+                .map_err(dbeer::Error::Odbc)?;
+
+            let stmt = Statement::with_parent(&connection).map_err(dbeer::Error::Odbc)?;
+
+            let msg = match stmt.exec_direct(&self.queries) {
+                Ok(data) => {
+                    let affected_rows = match data {
+                        Data(stmt) => stmt.affected_row_count().map_err(dbeer::Error::Odbc)?,
+                        NoData(stmt) => stmt.affected_row_count().map_err(dbeer::Error::Odbc)?,
+                    };
+                    if is_insert_update_or_delete(query) {
+                        format!("{})   Row(s) affected: {}", i + 1, affected_rows)
+                    } else {
+                        format!("{})   Statement executed correctly.", i + 1)
+                    }
+                }
+                Err(e) => format!("{})   {}", i + 1, e),
+            };
+
+            results.push(msg);
+        }
+
+        let filepath = table.create_dbeer_file_format();
+        println!("syn match dbeerStmtErr ' ' | hi link dbeerStmtErr ErrorMsg");
+        println!("{filepath}");
+        table.write_to_file(&filepath, &results)?;
+
+        Ok(())
     }
 
     fn tables(&mut self) -> crate::dbeer::Result {
-        todo!()
+        let connection = self
+            .environment
+            .connect_with_connection_string(&self.conn_str)
+            .map_err(dbeer::Error::Odbc)?;
+
+        let stmt = Statement::with_parent(&connection).map_err(dbeer::Error::Odbc)?;
+        let mut table_names = String::new();
+
+        if let Data(mut stmt) = stmt
+            .exec_direct(&self.queries)
+            .map_err(dbeer::Error::Odbc)?
+        {
+            let cols = stmt.num_result_cols().map_err(dbeer::Error::Odbc)?;
+            while let Some(mut cursor) = stmt.fetch().map_err(dbeer::Error::Odbc)? {
+                for i in 1..(cols + 1) {
+                    if let Some(value) = cursor
+                        .get_data::<&str>(i as u16)
+                        .map_err(dbeer::Error::Odbc)?
+                    {
+                        table_names.push_str(&format!("{} ", value));
+                    }
+                }
+            }
+        }
+
+        dbeer_debug!("Table names: {table_names}");
+        println!("[{table_names}]");
+
+        Ok(())
     }
 
     fn table_info(&mut self, _table: &mut Table) -> dbeer::Result {

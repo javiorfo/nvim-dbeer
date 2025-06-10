@@ -8,6 +8,7 @@ pub struct Informix {
 }
 
 impl Informix {
+    #[allow(clippy::result_large_err)]
     pub fn connect(conn_str: &str, queries: &str) -> dbeer::Result<Self> {
         Ok(Self {
             odbc: Odbc::new(conn_str, queries)?,
@@ -21,11 +22,13 @@ impl super::SqlExecutor for Informix {
     }
 
     fn execute(&mut self, table: &mut Table) -> dbeer::Result {
-        Ok(())
+        self.odbc.execute(table)
     }
 
     fn tables(&mut self) -> dbeer::Result {
-        todo!()
+        self.odbc.queries =
+            "SELECT tabname FROM systables WHERE tabtype = 'T' order by tabname;".to_string();
+        self.odbc.tables()
     }
 
     fn table_info(&mut self, table: &mut Table) -> dbeer::Result {
