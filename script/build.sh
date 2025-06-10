@@ -2,8 +2,7 @@
 
 ROOT=$1
 
-## GO ##
-(cd $ROOT/go && go build -o dbeer main.go)
+(cd $ROOT/rust && cargo build --release)
 
 if [ $? -ne 0 ]; then
     exit 1
@@ -12,4 +11,4 @@ fi
 BIN=$ROOT/bin
 mkdir -p $BIN
 
-mv $ROOT/go/dbeer $BIN
+mv $ROOT/rust/target/release/dbeer $BIN

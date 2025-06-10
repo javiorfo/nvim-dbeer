@@ -19,7 +19,7 @@ pub struct Postgres {
 }
 
 impl Postgres {
-    pub fn connect(conn_str: &str, queries: &str) -> dbeer::Result<Postgres> {
+    pub fn connect(conn_str: &str, queries: &str) -> dbeer::Result<Self> {
         Ok(Self {
             queries: queries.to_string(),
             client: Client::connect(conn_str, NoTls).map_err(|_| {

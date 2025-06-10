@@ -1,9 +1,12 @@
 use std::collections::HashMap;
 
-use mysql::{Pool, PooledConn, Value, prelude::Queryable};
+use mysql::{Params, Pool, PooledConn, prelude::Queryable};
 
 use crate::{
-    dbeer::{self, Header},
+    dbeer::{
+        self, Header,
+        query::{is_insert_update_or_delete, split_queries},
+    },
     dbeer_debug,
 };
 
@@ -14,7 +17,7 @@ pub struct MySql {
 }
 
 impl MySql {
-    pub fn connect(conn_str: &str, queries: &str, db_name: &str) -> dbeer::Result<MySql> {
+    pub fn connect(conn_str: &str, queries: &str, db_name: &str) -> dbeer::Result<Self> {
         let pool = Pool::new(conn_str).map_err(dbeer::Error::MySql)?;
 
         Ok(Self {
@@ -72,6 +75,11 @@ impl super::SqlExecutor for MySql {
             rows.push(columns);
         }
 
+        if rows.is_empty() {
+            println!("  Query has returned 0 results.");
+            return Ok(());
+        }
+
         table.headers = headers;
         table.rows = rows;
 
@@ -82,12 +90,46 @@ impl super::SqlExecutor for MySql {
     }
 
     fn execute(&mut self, table: &mut dbeer::Table) -> dbeer::Result {
-        let results = self
-            .connection
-            .query_iter(&self.queries)
-            .map_err(dbeer::Error::MySql)?;
+        let queries = split_queries(&self.queries);
 
-        println!("Rows affected: {}", results.affected_rows());
+        if queries.len() == 1 {
+            let query = queries[0];
+            self.connection
+                .exec_drop(query, Params::Empty)
+                .map_err(dbeer::Error::MySql)?;
+
+            if is_insert_update_or_delete(query) {
+                println!("  Row(s) affected: {}", self.connection.affected_rows());
+            } else {
+                println!("  Statement executed correctly.");
+            }
+            return Ok(());
+        }
+
+        let mut results = Vec::new();
+        for (i, &query) in queries.iter().enumerate() {
+            let msg = match self.connection.exec_drop(query, Params::Empty) {
+                Ok(_) => {
+                    if is_insert_update_or_delete(query) {
+                        format!(
+                            "{})   Row(s) affected: {}",
+                            i + 1,
+                            self.connection.affected_rows()
+                        )
+                    } else {
+                        format!("{})   Statement executed correctly.", i + 1)
+                    }
+                }
+                Err(e) => format!("{})   {}", i + 1, e),
+            };
+            results.push(msg);
+        }
+
+        let filepath = table.create_dbeer_file_format();
+        println!("syn match dbeerStmtErr ' ' | hi link dbeerStmtErr ErrorMsg");
+        println!("{filepath}");
+        table.write_to_file(&filepath, &results)?;
+
         Ok(())
     }
 

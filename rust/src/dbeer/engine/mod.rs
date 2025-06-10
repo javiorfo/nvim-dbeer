@@ -2,8 +2,10 @@ mod informix;
 mod mongo;
 mod mysql;
 mod neo4j;
+pub mod odbc;
 mod postgres;
 
+pub use informix::Informix;
 pub use mysql::MySql;
 pub use postgres::Postgres;
 

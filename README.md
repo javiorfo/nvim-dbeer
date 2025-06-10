@@ -14,14 +14,14 @@
 | IBM DB2 | :heavy_check_mark: | ODBC | Supported operations detailed [here](#sql) |
 | IBM Informix | :heavy_check_mark: | ODBC | Supported operations detailed [here](#sql) |
 | MariaDB | :heavy_check_mark: | Rust Native | Supported operations detailed [here](#sql) |
-| MongoDB | :heavy_check_mark: | Rust Native | Supported operations detailed [here](#nosql) |
+| MongoDB | :x: | Future release | Supported operations detailed [here](#nosql) |
 | MS-SQL | :heavy_check_mark: | ODBC | Supported operations detailed [here](#sql) |
 | MySQL | :heavy_check_mark: | Rust Native | Supported operations detailed [here](#sql) |
 | Neo4j | :x: | Rust Native | Future release |
 | Oracle | :heavy_check_mark: | ODBC | Supported operations detailed [here](#sql) |
 | PostgreSQL | :heavy_check_mark: | Rust Native | Supported operations detailed [here](#sql) |
 | Redis | :x: | Rust Native | Future release |
-| SQLite | :heavy_check_mark: | Rust Native | Supported operations detailed [here](#sql) |
+| SQLite | :x: | Future release | Supported operations detailed [here](#sql) |
 
 
 ## Demo
