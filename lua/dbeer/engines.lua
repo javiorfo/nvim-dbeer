@@ -31,7 +31,8 @@ return {
             default_host = host,
             executor = go_executor,
             get_connection_string = function(connection)
-                return string.format("%s%stcp(%s:%s)/%s",
+--                 return string.format("%s%stcp(%s:%s)/%s",
+                return string.format("mysql://%s%s%s:%s/%s",
                     connection.user and connection.user .. ":" or "",
                     connection.password and connection.password .. "@" or "",
                     connection.host or host,
@@ -98,7 +99,7 @@ return {
             end
         },
         db2 = {
-            title = "db2",
+            title = "DB2",
             default_port = "-",
             default_host = "-",
             executor = go_executor,

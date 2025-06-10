@@ -2,7 +2,7 @@ use super::command::Action;
 use crate::dbeer::{
     self,
     command::Command,
-    engine::{Postgres, SqlExecutor, Type},
+    engine::{MySql, Postgres, SqlExecutor, Type},
     query::{is_select_query, strip_sql_comments},
     table::Table,
 };
@@ -12,8 +12,13 @@ pub fn process(command: Command, engine_type: Type) -> dbeer::Result {
         Type::Sql => {
             let queries = strip_sql_comments(&command.queries);
 
-            let engine: &mut dyn SqlExecutor = &mut match command.engine.as_str() {
-                "postgres" => Postgres::connect(&command.conn_str, &queries)?,
+            let mut engine: Box<dyn SqlExecutor> = match command.engine.as_str() {
+                "postgres" => Box::new(Postgres::connect(&command.conn_str, &queries)?),
+                "mysql" => Box::new(MySql::connect(
+                    &command.conn_str,
+                    &queries,
+                    &command.db_name,
+                )?),
                 not_supported => {
                     return Err(dbeer::Error::Msg(format!(
                         "Engine {} is not supported",

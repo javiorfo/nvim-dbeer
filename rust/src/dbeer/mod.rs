@@ -5,7 +5,8 @@ pub mod engine;
 mod error;
 pub mod logger;
 pub mod query;
-pub mod table;
+mod table;
 
 pub use border::*;
 pub use error::*;
+pub use table::{Header, Table};

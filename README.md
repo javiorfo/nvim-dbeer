@@ -2,7 +2,7 @@
 *Minimal Multi database client for Neovim*
 
 ## Caveats
-- These dependencies are required to be installed: `Go` (1.23), `unixodbc`. 
+- These dependencies are required to be installed: `Rust`, `unixodbc`. 
 - For the sake of simplicity, **this plugin is STATELESS**. It does not use database sessions or keep states after Neovim is closed.
 - This plugin has been developed on and for `Linux` following open source philosophy.
 
@@ -13,15 +13,15 @@
 | ------- | ------------- | ------ | ---- |
 | IBM DB2 | :heavy_check_mark: | ODBC | Supported operations detailed [here](#sql) |
 | IBM Informix | :heavy_check_mark: | ODBC | Supported operations detailed [here](#sql) |
-| MariaDB | :heavy_check_mark: | Built-in | Supported operations detailed [here](#sql) |
-| MongoDB | :heavy_check_mark: | Built-in | Supported operations detailed [here](#nosql) |
-| MS-SQL | :heavy_check_mark: | Built-in | Supported operations detailed [here](#sql) |
-| MySQL | :heavy_check_mark: | Built-in | Supported operations detailed [here](#sql) |
-| Neo4j | :x: | Built-in | Future release |
-| Oracle | :heavy_check_mark: | Built-in | Supported operations detailed [here](#sql) |
-| PostgreSQL | :heavy_check_mark: | Built-in | Supported operations detailed [here](#sql) |
-| Redis | :x: | Built-in | Future release |
-| SQLite | :heavy_check_mark: | Built-in | Supported operations detailed [here](#sql) |
+| MariaDB | :heavy_check_mark: | Rust Native | Supported operations detailed [here](#sql) |
+| MongoDB | :heavy_check_mark: | Rust Native | Supported operations detailed [here](#nosql) |
+| MS-SQL | :heavy_check_mark: | ODBC | Supported operations detailed [here](#sql) |
+| MySQL | :heavy_check_mark: | Rust Native | Supported operations detailed [here](#sql) |
+| Neo4j | :x: | Rust Native | Future release |
+| Oracle | :heavy_check_mark: | ODBC | Supported operations detailed [here](#sql) |
+| PostgreSQL | :heavy_check_mark: | Rust Native | Supported operations detailed [here](#sql) |
+| Redis | :x: | Rust Native | Future release |
+| SQLite | :heavy_check_mark: | Rust Native | Supported operations detailed [here](#sql) |
 
 
 ## Demo
@@ -243,7 +243,7 @@ opts = {
 ### Sql
 - [x] All select and subselect queries
 - [x] Commands insert, update, delete, create, modify, etc
-- [ ] Comments (queries with comments could not be processed)
+- [x] Comments allowed (simple and multiline comments)
 - Execution of multiple semicolon-separated queries
     - [x] Commands insert, update, delete, create, modify, etc
     - [ ] Select statements

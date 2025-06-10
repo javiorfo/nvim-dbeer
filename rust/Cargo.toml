@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 chrono = "0.4.41"
+mysql = "26.0.0"
 odbc = "0.17.0"
 postgres = { version = "0.19.10", features = ["with-chrono-0_4"] }
 regex = "1.11.1"

@@ -7,9 +7,8 @@ use postgres::{
 
 use crate::{
     dbeer::{
-        self,
         query::{is_insert_update_or_delete, split_queries},
-        table::{Header, Table},
+        {self, Header, Table},
     },
     dbeer_debug,
 };
@@ -91,7 +90,7 @@ impl super::SqlExecutor for Postgres {
             .columns()
             .iter()
             .enumerate()
-            .map(|(i, v)| (i + 2, Header::new(v.name())))
+            .map(|(i, c)| (i + 2, Header::new(c.name())))
             .collect();
 
         headers.insert(1, Header::row_counter());
@@ -104,6 +103,7 @@ impl super::SqlExecutor for Postgres {
             let id_column = format!(" #{}", i + 1);
             let id_column_length = id_column.len() + 1;
             columns.push(id_column);
+
             let column_counter = headers.get_mut(&1).unwrap();
             if column_counter.length < id_column_length {
                 column_counter.length = id_column_length;

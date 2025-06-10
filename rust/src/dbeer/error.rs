@@ -2,6 +2,7 @@
 pub enum Error {
     Io(std::io::Error),
     Postgres(postgres::Error),
+    MySql(mysql::Error),
     Msg(String),
 }
 
@@ -12,6 +13,7 @@ impl std::fmt::Display for Error {
         match self {
             Error::Io(e) => write!(f, "IO error => {}", e),
             Error::Postgres(e) => write!(f, "Postgres error => {}", e),
+            Error::MySql(e) => write!(f, "MySql error => {}", e),
             Error::Msg(e) => write!(f, "{}", e),
         }
     }
@@ -22,6 +24,7 @@ impl std::error::Error for Error {
         match self {
             Error::Io(e) => Some(e),
             Error::Postgres(e) => Some(e),
+            Error::MySql(e) => Some(e),
             Error::Msg(_) => None,
         }
     }

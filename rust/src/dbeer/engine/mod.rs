@@ -1,8 +1,10 @@
 mod informix;
 mod mongo;
+mod mysql;
 mod neo4j;
 mod postgres;
 
+pub use mysql::MySql;
 pub use postgres::Postgres;
 
 use crate::dbeer::{self, table::Table};
