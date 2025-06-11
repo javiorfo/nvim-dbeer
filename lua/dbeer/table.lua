@@ -50,7 +50,7 @@ local function show_table_info(table_selected)
         setup.output.border_style,
         setup.output.header_style_link, util.dbeer_log_file, conn.dbname, setup.internal.log_debug))
 
-    util.logger:debug(result)
+    util.logger:debug("results backend:" .. result)
 
     local line_1, dbeer_file
 
