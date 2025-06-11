@@ -33,8 +33,7 @@ impl super::SqlExecutor for MsSql {
     fn table_info(&mut self, table: &mut Table) -> dbeer::Result {
         self.odbc.queries = self.table_info_query();
         dbeer_debug!("Table info query: {}", self.odbc.queries);
-        self.select(table)?;
-        Ok(())
+        self.select(table)
     }
 
     fn table_info_query(&self) -> String {

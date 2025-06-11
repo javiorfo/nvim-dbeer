@@ -35,84 +35,94 @@ impl Odbc {
 
 impl SqlExecutor for Odbc {
     fn select(&mut self, table: &mut Table) -> dbeer::Result {
-        let connection = self
-            .environment
-            .connect_with_connection_string(&self.conn_str)
-            .map_err(dbeer::Error::Odbc)?;
+        let result = std::panic::catch_unwind(|| {
+            let connection = self
+                .environment
+                .connect_with_connection_string(&self.conn_str)
+                .map_err(dbeer::Error::Odbc)?;
 
-        let stmt = Statement::with_parent(&connection).map_err(dbeer::Error::Odbc)?;
-        let mut headers = HashMap::new();
-        headers.insert(1, Header::row_counter());
-        let mut rows: Vec<Vec<String>> = Vec::new();
+            let stmt = Statement::with_parent(&connection).map_err(dbeer::Error::Odbc)?;
+            let mut headers = HashMap::new();
+            headers.insert(1, Header::row_counter());
+            let mut rows: Vec<Vec<String>> = Vec::new();
 
-        match stmt
-            .exec_direct(&self.queries)
-            .map_err(dbeer::Error::Odbc)?
-        {
-            Data(mut stmt) => {
-                let columns_len = stmt.num_result_cols().map_err(dbeer::Error::Odbc)?;
-
-                for i in 1..=columns_len {
-                    headers.insert(
-                        (i + 1) as usize,
-                        Header::new(
-                            &stmt
-                                .describe_col(i as u16)
-                                .map_err(dbeer::Error::Odbc)?
-                                .name
-                                .to_uppercase(),
-                        ),
-                    );
-                }
-
-                let mut col_counter = 1;
-
-                while let Some(mut cursor) = stmt.fetch().map_err(dbeer::Error::Odbc)? {
-                    let mut columns = Vec::with_capacity(headers.len());
-                    let id_column = format!(" #{}", col_counter);
-                    let id_column_length = id_column.len() + 1;
-                    columns.push(id_column);
-
-                    let column_counter = headers.get_mut(&1).unwrap();
-                    if column_counter.length < id_column_length {
-                        column_counter.length = id_column_length;
-                    }
-                    col_counter += 1;
+            match stmt
+                .exec_direct(&self.queries)
+                .map_err(dbeer::Error::Odbc)?
+            {
+                Data(mut stmt) => {
+                    let columns_len = stmt.num_result_cols().map_err(dbeer::Error::Odbc)?;
 
                     for i in 1..=columns_len {
-                        let value = if let Some(value) = cursor
-                            .get_data::<&str>(i as u16)
-                            .map_err(dbeer::Error::Odbc)?
-                        {
-                            columns.push(format!(" {}", value));
-                            value
-                        } else {
-                            columns.push(" NULL".to_string());
-                            "NULL"
-                        };
-
-                        let column = headers.get_mut(&(i as usize + 1)).unwrap();
-                        let length = value.chars().count() + 2;
-                        if column.length < length {
-                            column.length = length;
-                        }
+                        headers.insert(
+                            (i + 1) as usize,
+                            Header::new(
+                                &stmt
+                                    .describe_col(i as u16)
+                                    .map_err(dbeer::Error::Odbc)?
+                                    .name
+                                    .to_uppercase(),
+                            ),
+                        );
                     }
-                    rows.push(columns);
+
+                    let mut col_counter = 1;
+
+                    while let Some(mut cursor) = stmt.fetch().map_err(dbeer::Error::Odbc)? {
+                        let mut columns = Vec::with_capacity(headers.len());
+                        let id_column = format!(" #{}", col_counter);
+                        let id_column_length = id_column.len() + 1;
+                        columns.push(id_column);
+
+                        let column_counter = headers.get_mut(&1).unwrap();
+                        if column_counter.length < id_column_length {
+                            column_counter.length = id_column_length;
+                        }
+                        col_counter += 1;
+
+                        for i in 1..=columns_len {
+                            let value = if let Some(value) = cursor
+                                .get_data::<&str>(i as u16)
+                                .map_err(dbeer::Error::Odbc)?
+                            {
+                                columns.push(format!(" {}", value));
+                                value
+                            } else {
+                                columns.push(" NULL".to_string());
+                                "NULL"
+                            };
+
+                            let column = headers.get_mut(&(i as usize + 1)).unwrap();
+                            let length = value.chars().count() + 2;
+                            if column.length < length {
+                                column.length = length;
+                            }
+                        }
+                        rows.push(columns);
+                    }
+                }
+                NoData(_) => {
+                    println!("  Query has returned 0 results.");
+                    //                 return Ok(());
+                    return Ok((headers, rows, true));
                 }
             }
-            NoData(_) => {
-                println!("  Query has returned 0 results.");
-                return Ok(());
+
+            Ok((headers, rows, false))
+        });
+
+        match result {
+            Ok(Ok((headers, rows, no_data))) => {
+                if no_data {
+                    return Ok(());
+                }
+                table.update_headers_and_rows(headers, rows)
+            }
+            Ok(Err(e)) => Err(e),
+            Err(_) => {
+                Err(dbeer::Error::Msg("SQL syntax error".into()))
             }
         }
-
-        table.headers = headers;
-        table.rows = rows;
-
-        dbeer_debug!("Generating dbeer table...");
-        table.generate()?;
-
-        Ok(())
     }
 
     fn execute(&mut self, table: &mut Table) -> dbeer::Result {
@@ -169,12 +179,7 @@ impl SqlExecutor for Odbc {
             results.push(msg);
         }
 
-        let filepath = table.create_dbeer_file_format();
-        println!("syn match dbeerStmtErr ' ' | hi link dbeerStmtErr ErrorMsg");
-        println!("{filepath}");
-        table.write_to_file(&filepath, &results)?;
-
-        Ok(())
+        table.create_execute_result_file(results)
     }
 
     fn tables(&mut self) -> crate::dbeer::Result {

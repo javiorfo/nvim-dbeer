@@ -81,13 +81,7 @@ impl super::SqlExecutor for MySql {
             return Ok(());
         }
 
-        table.headers = headers;
-        table.rows = rows;
-
-        dbeer_debug!("Generating dbeer table...");
-        table.generate()?;
-
-        Ok(())
+        table.update_headers_and_rows(headers, rows)
     }
 
     fn execute(&mut self, table: &mut dbeer::Table) -> dbeer::Result {
@@ -126,12 +120,7 @@ impl super::SqlExecutor for MySql {
             results.push(msg);
         }
 
-        let filepath = table.create_dbeer_file_format();
-        println!("syn match dbeerStmtErr ' ' | hi link dbeerStmtErr ErrorMsg");
-        println!("{filepath}");
-        table.write_to_file(&filepath, &results)?;
-
-        Ok(())
+        table.create_execute_result_file(results)
     }
 
     fn tables(&mut self) -> dbeer::Result {
@@ -160,8 +149,7 @@ impl super::SqlExecutor for MySql {
     fn table_info(&mut self, table: &mut dbeer::Table) -> dbeer::Result {
         self.queries = self.table_info_query();
         dbeer_debug!("Table info query: {}", self.queries);
-        self.select(table)?;
-        Ok(())
+        self.select(table)
     }
 
     fn table_info_query(&self) -> String {

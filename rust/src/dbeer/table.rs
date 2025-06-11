@@ -50,6 +50,30 @@ impl Table {
     }
 
     #[allow(clippy::result_large_err)]
+    pub fn update_headers_and_rows(
+        &mut self,
+        headers: HashMap<usize, Header>,
+        rows: Vec<Vec<String>>,
+    ) -> dbeer::Result {
+        self.headers = headers;
+        self.rows = rows;
+
+        dbeer_debug!("Generating dbeer table...");
+        self.generate()
+    }
+
+    #[allow(clippy::result_large_err)]
+    pub fn create_execute_result_file(&self, results: Vec<String>) -> dbeer::Result {
+        let filepath = self.create_dbeer_file_format();
+        println!("syn match dbeerStmtErr ' ' | hi link dbeerStmtErr ErrorMsg");
+        println!("{filepath}");
+
+        dbeer_debug!("File path: {filepath}. Results {results:#?}");
+
+        self.write_to_file(&filepath, &results)
+    }
+
+    #[allow(clippy::result_large_err)]
     pub fn generate(&self) -> dbeer::Result {
         let border = self.border_style.get();
 
@@ -113,13 +137,14 @@ impl Table {
         }
 
         let filepath = self.create_dbeer_file_format();
+
         dbeer_debug!("File path: {}", filepath);
+        dbeer_debug!("Table: {:#?}", table);
+
         println!("{}", Self::hi(&self.headers, &self.header_style_link));
         println!("{filepath}");
 
-        self.write_to_file(&filepath, &table)?;
-
-        Ok(())
+        self.write_to_file(&filepath, &table)
     }
 
     fn add_spaces(input_string: &str, len: usize) -> String {
@@ -146,9 +171,7 @@ impl Table {
                 .map_err(dbeer::Error::Io)?;
         }
 
-        writer.flush().map_err(dbeer::Error::Io)?;
-
-        Ok(())
+        writer.flush().map_err(dbeer::Error::Io)
     }
 
     fn hi(headers: &HashMap<usize, Header>, style: &str) -> String {
