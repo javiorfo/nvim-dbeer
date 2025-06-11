@@ -36,9 +36,15 @@ fn main() {
     dbeer_debug!("Debug enabled!");
     dbeer_debug!("Parsed params: {command:#?}");
 
-    let engine_type = command.engine.clone();
-    if let Err(e) = process(command, engine_type.into()) {
-        let error_msg = format!("[ERROR] {}", e);
+    if let Err(e) = std::panic::catch_unwind(|| {
+        let engine_type = command.engine.clone();
+        if let Err(e) = process(command, engine_type.into()) {
+            let error_msg = format!("[ERROR] {}", e);
+            println!("{error_msg}");
+            dbeer_error!("{error_msg}");
+        }
+    }) {
+        let error_msg = format!("[ERROR] Internal error: {:?}", e);
         println!("{error_msg}");
         dbeer_error!("{error_msg}");
     }
