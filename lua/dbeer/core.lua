@@ -131,8 +131,21 @@ function M.build()
         root_path,
         root_path, util.dbeer_log_file)
     local spinner = spinetta:new {
-        main_msg = "  DBeer   Building plugin... ",
-        speed_ms = 100,
+        main_msg = "  DBeer   Rust build could take some time... ",
+        speed_ms = 200,
+        spinner = {
+            "(     )",
+            "(     )",
+            "(     )",
+            "(     )",
+            "(     )",
+            "(     )",
+            "(     )",
+            "(     )",
+            "(     )",
+            "(     )",
+            "(     )"
+        },
         on_success = function()
             util.logger:info("  DBeer is ready to be used!")
         end

@@ -4,9 +4,15 @@ local host = "127.0.0.1"
 local default_posgres_port = "5432"
 local default_mongo_port = "27017"
 local default_mysql_port = "3306"
-local default_mssql_port = "1433"
-local default_oracle_port = "1521"
-local go_executor = util.dbeer_root_path .. "bin/dbeer"
+local exe = util.dbeer_root_path .. "bin/dbeer"
+
+local function odbc(connection)
+    return string.format("DSN=%s;%s%s",
+        connection.dbname,
+        connection.user and "UID=" .. connection.user .. ";" or "",
+        connection.password and "PWD=" .. connection.password .. ";" or ""
+    )
+end
 
 return {
     db = {
@@ -14,7 +20,7 @@ return {
             title = "PostgreSQL",
             default_port = default_posgres_port,
             default_host = host,
-            executor = go_executor,
+            executor = exe,
             get_connection_string = function(connection)
                 return string.format("host=%s port=%s dbname=%s %s %s sslmode=disable",
                     connection.host or host,
@@ -29,9 +35,8 @@ return {
             title = "MySQL",
             default_port = default_mysql_port,
             default_host = host,
-            executor = go_executor,
+            executor = exe,
             get_connection_string = function(connection)
---                 return string.format("%s%stcp(%s:%s)/%s",
                 return string.format("mysql://%s%s%s:%s/%s",
                     connection.user and connection.user .. ":" or "",
                     connection.password and connection.password .. "@" or "",
@@ -45,7 +50,7 @@ return {
             title = "MongoDB",
             default_port = default_mongo_port,
             default_host = host,
-            executor = go_executor,
+            executor = exe,
             get_connection_string = function(connection)
                 return string.format("mongodb://%s%s%s:%s",
                     connection.user and connection.user or "",
@@ -57,65 +62,37 @@ return {
         },
         mssql = {
             title = "MS-SQL",
-            default_port = default_mssql_port,
-            default_host = host,
-            executor = go_executor,
-            get_connection_string = function(connection)
-                return string.format("sqlserver://%s%s%s:%s?database=%s",
-                    connection.user and connection.user or "",
-                    connection.password and ":" .. connection.password .. "@" or "",
-                    connection.host or host,
-                    connection.port or default_mssql_port,
-                    connection.dbname
-                )
-            end
+            default_port = "-",
+            default_host = "-",
+            executor = exe,
+            get_connection_string = odbc
         },
         oracle = {
             title = "Oracle",
-            default_port = default_oracle_port,
-            default_host = host,
-            executor = go_executor,
-            get_connection_string = function(connection)
-                return string.format("%s%s%s:%s/%s",
-                    connection.user and connection.user or "",
-                    connection.password and ":" .. connection.password .. "@" or "",
-                    connection.host or host,
-                    connection.port or default_oracle_port,
-                    connection.dbname
-                )
-            end
+            default_port = "-",
+            default_host = "-",
+            executor = exe,
+            get_connection_string = odbc
         },
         informix = {
             title = "Informix",
-            executor = go_executor,
             default_port = "-",
             default_host = "-",
-            get_connection_string = function(connection)
-                return string.format("DSN=%s;%s%s",
-                    connection.dbname,
-                    connection.user and "UID=" .. connection.user .. ";" or "",
-                    connection.password and "PWD=" .. connection.password .. ";" or ""
-                )
-            end
+            executor = exe,
+            get_connection_string = odbc
         },
         db2 = {
             title = "DB2",
             default_port = "-",
             default_host = "-",
-            executor = go_executor,
-            get_connection_string = function(connection)
-                return string.format("DSN=%s;%s%s",
-                    connection.dbname,
-                    connection.user and "UID=" .. connection.user .. ";" or "",
-                    connection.password and "PWD=" .. connection.password .. ";" or ""
-                )
-            end
+            executor = exe,
+            get_connection_string = odbc
         },
         sqlite = {
             title = "SQLite",
             default_port = "-",
             default_host = "-",
-            executor = go_executor,
+            executor = exe,
             get_connection_string = function(connection)
                 return connection.dbname
             end

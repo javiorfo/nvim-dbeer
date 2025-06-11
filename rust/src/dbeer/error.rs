@@ -5,6 +5,7 @@ pub enum Error {
     Postgres(postgres::Error),
     MySql(mysql::Error),
     Odbc(odbc::DiagnosticRecord),
+    Sqlite(sqlite::Error),
     Msg(String),
 }
 
@@ -16,6 +17,7 @@ impl std::fmt::Display for Error {
             Error::Io(e) => write!(f, "IO error => {}", e),
             Error::Postgres(e) => write!(f, "Postgres error => {}", e),
             Error::MySql(e) => write!(f, "MySql error => {}", e),
+            Error::Sqlite(e) => write!(f, "Sqlite error => {}", e),
             Error::Odbc(e) => write!(
                 f,
                 "Odbc error => {}",
@@ -32,6 +34,7 @@ impl std::error::Error for Error {
             Error::Io(e) => Some(e),
             Error::Postgres(e) => Some(e),
             Error::MySql(e) => Some(e),
+            Error::Sqlite(e) => Some(e),
             Error::Odbc(e) => Some(e),
             Error::Msg(_) => None,
         }

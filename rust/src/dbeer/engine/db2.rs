@@ -30,7 +30,9 @@ impl super::SqlExecutor for Db2 {
     }
 
     fn table_info(&mut self, _table: &mut Table) -> dbeer::Result {
-        Err(dbeer::Error::Msg("Not implemented".to_string()))
+        Err(dbeer::Error::Msg(
+            "Table info not implemented in DB2".to_string(),
+        ))
     }
 
     fn table_info_query(&self) -> String {

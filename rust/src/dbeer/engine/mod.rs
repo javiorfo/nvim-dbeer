@@ -7,6 +7,7 @@ mod neo4j;
 pub mod odbc;
 mod oracle;
 mod postgres;
+mod sqlite;
 
 pub use db2::Db2;
 pub use informix::Informix;
@@ -14,6 +15,7 @@ pub use mssql::MsSql;
 pub use mysql::MySql;
 pub use oracle::Oracle;
 pub use postgres::Postgres;
+pub use sqlite::Sqlite;
 
 use crate::dbeer::{self, table::Table};
 
