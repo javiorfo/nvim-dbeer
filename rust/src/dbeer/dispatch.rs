@@ -2,7 +2,7 @@ use super::command::Action;
 use crate::dbeer::{
     self,
     command::Command,
-    engine::{Db2, Informix, MsSql, MySql, Oracle, Postgres, SqlExecutor, Sqlite, Type},
+    engine::{Db2, Informix, Mongo, MsSql, MySql, Oracle, Postgres, SqlExecutor, Sqlite, Type},
     query::{is_select_query, strip_sql_comments},
     table::Table,
 };
@@ -55,7 +55,18 @@ pub fn process(command: Command, engine_type: Type) -> dbeer::Result {
                 ))?,
             }
         }
-        Type::Mongo => return Err(dbeer::Error::Msg("Mongo not implemented yet".to_string())),
+        Type::Mongo => {
+            let mongo = Mongo::connect(&command.conn_str, &command.db_name, &command.queries)?;
+
+            match command.action {
+                Action::Run => mongo.run(Table {
+                    dest_folder: command.dest_folder,
+                    ..Table::default()
+                })?,
+                Action::Tables => mongo.tables()?,
+                Action::TableInfo => mongo.table_info()?,
+            }
+        }
         Type::Neo4j => return Err(dbeer::Error::Msg("Neo4j not implemented yet".to_string())),
         Type::Redis => return Err(dbeer::Error::Msg("Redis not implemented yet".to_string())),
     }

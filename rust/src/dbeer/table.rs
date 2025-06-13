@@ -203,11 +203,11 @@ impl Table {
         )
     }
 
-    fn _create_dbeer_mongo_file_format(dest_folder: &str) -> String {
+    pub fn create_dbeer_mongo_file_format(&self) -> String {
         let timestamp = Local::now().format("%Y%m%d-%H%M%S").to_string();
         format!(
             "{}/{}.{}.{}",
-            dest_folder,
+            self.dest_folder,
             timestamp,
             Self::DBEER_EXTENSION,
             "json"

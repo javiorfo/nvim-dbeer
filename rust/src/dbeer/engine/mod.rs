@@ -16,6 +16,7 @@ pub use mysql::MySql;
 pub use oracle::Oracle;
 pub use postgres::Postgres;
 pub use sqlite::Sqlite;
+pub use mongo::Mongo;
 
 use crate::dbeer::{self, table::Table};
 

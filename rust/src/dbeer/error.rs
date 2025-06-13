@@ -3,9 +3,12 @@
 pub enum Error {
     Io(std::io::Error),
     Postgres(postgres::Error),
+    Mongo(mongodb::error::Error),
+    Bson(mongodb::bson::ser::Error),
     MySql(mysql::Error),
     Odbc(odbc::DiagnosticRecord),
     Sqlite(sqlite::Error),
+    Serde(serde_json::Error),
     Msg(String),
 }
 
@@ -16,6 +19,8 @@ impl std::fmt::Display for Error {
         match self {
             Error::Io(e) => write!(f, "IO error => {}", e),
             Error::Postgres(e) => write!(f, "Postgres error => {}", e),
+            Error::Mongo(e) => write!(f, "Mongo error => {}", e),
+            Error::Bson(e) => write!(f, "Bson error => {}", e),
             Error::MySql(e) => write!(f, "MySql error => {}", e),
             Error::Sqlite(e) => write!(f, "Sqlite error => {}", e),
             Error::Odbc(e) => write!(
@@ -23,6 +28,7 @@ impl std::fmt::Display for Error {
                 "Odbc error => {}",
                 std::str::from_utf8(e.get_raw_message()).unwrap_or("No info available")
             ),
+            Error::Serde(e) => write!(f, "Serde error => {}", e),
             Error::Msg(e) => write!(f, "{}", e),
         }
     }
@@ -33,9 +39,12 @@ impl std::error::Error for Error {
         match self {
             Error::Io(e) => Some(e),
             Error::Postgres(e) => Some(e),
+            Error::Mongo(e) => Some(e),
+            Error::Bson(e) => Some(e),
             Error::MySql(e) => Some(e),
             Error::Sqlite(e) => Some(e),
             Error::Odbc(e) => Some(e),
+            Error::Serde(e) => Some(e),
             Error::Msg(_) => None,
         }
     }

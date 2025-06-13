@@ -252,7 +252,7 @@ opts = {
 
 ### NoSql
 - Operations
-    - [x] "find" with filters and subsequet "sort", "skip" or "limit"
+    - [x] "find" with filters and subsequent "sort", "skip" or "limit"
     - [x] "countDocuments"
     - [x] "findOne" with filters
     - [x] "insertOne"
