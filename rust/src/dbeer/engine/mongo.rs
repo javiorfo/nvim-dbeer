@@ -1,11 +1,11 @@
 use mongodb::{
     bson::{Bson, Document, to_document},
-    sync::{Client, Collection},
+    sync::{Client, Collection, Database},
 };
 use regex::Regex;
 use serde_json::Value;
 
-use crate::dbeer;
+use crate::{dbeer, dbeer_debug};
 
 #[derive(Debug, PartialEq, Eq)]
 enum SubFunction {
@@ -100,21 +100,25 @@ impl Function {
 
 #[derive(Debug)]
 pub struct Mongo {
-    function: Function,
-    collection: Collection<Document>,
+    queries: String,
+    database: Database,
 }
 
 impl Mongo {
     #[allow(clippy::result_large_err)]
     pub fn connect(conn_str: &str, db_name: &str, queries: &str) -> dbeer::Result<Self> {
-        if queries.is_empty() {
-            return Err(dbeer::Error::Msg("Nothing to execute".to_string()));
-        }
-
         let client = Client::with_uri_str(conn_str).map_err(dbeer::Error::Mongo)?;
-        let db = client.database(db_name);
+        let database = client.database(db_name);
 
-        let parts: Vec<&str> = queries.split(".").collect();
+        Ok(Self {
+            queries: queries.to_string(),
+            database,
+        })
+    }
+
+    #[allow(clippy::result_large_err)]
+    pub fn run(&self, table: dbeer::Table) -> dbeer::Result {
+        let parts: Vec<&str> = self.queries.split(".").collect();
 
         let (collection_name, function) = if parts.len() > 1 {
             if parts[0] == "db" {
@@ -133,47 +137,36 @@ impl Mongo {
         } else {
             return Err(dbeer::Error::Msg(format!(
                 "MongoDB bad format: {}",
-                queries
+                self.queries
             )));
         };
 
-        let collection: Collection<Document> = db.collection(collection_name);
+        let collection: Collection<Document> = self.database.collection(collection_name);
 
-        Ok(Self {
-            function,
-            collection,
-        })
-    }
-
-    #[allow(clippy::result_large_err)]
-    pub fn run(&self, table: dbeer::Table) -> dbeer::Result {
-        match &self.function {
+        match &function {
             Function::Find(params, sub_function) => {
                 let cursor = match sub_function {
-                    SubFunction::Sort(sub_params) => self
-                        .collection
+                    SubFunction::Sort(sub_params) => collection
                         .find(self.create_document(params)?)
                         .sort(self.create_document(sub_params)?)
                         .run()
                         .map_err(dbeer::Error::Mongo)?,
-                    SubFunction::Skip(number) => self
-                        .collection
+                    SubFunction::Skip(number) => collection
                         .find(self.create_document(params)?)
                         .skip(*number)
                         .run()
                         .map_err(dbeer::Error::Mongo)?,
-                    SubFunction::Limit(number) => self
-                        .collection
+                    SubFunction::Limit(number) => collection
                         .find(self.create_document(params)?)
                         .limit(*number)
                         .run()
                         .map_err(dbeer::Error::Mongo)?,
-                    _ => self
-                        .collection
+                    _ => collection
                         .find(self.create_document(params)?)
                         .run()
                         .map_err(dbeer::Error::Mongo)?,
                 };
+
                 let mut results = Vec::new();
                 for result in cursor {
                     let json_str =
@@ -190,8 +183,7 @@ impl Mongo {
                 table.create_execute_result_file(dbeer::Format::Json(results))?
             }
             Function::FindOne(params) => {
-                let document = self
-                    .collection
+                let document = collection
                     .find_one(self.create_document(params)?)
                     .run()
                     .map_err(dbeer::Error::Mongo)?;
@@ -207,23 +199,21 @@ impl Mongo {
                 table.create_execute_result_file(dbeer::Format::Json(vec![json_str]))?
             }
             Function::CountDocuments(params) => {
-                let total = self
-                    .collection
+                let total = collection
                     .count_documents(self.create_document(params)?)
                     .run()
                     .map_err(dbeer::Error::Mongo)?;
 
                 println!(
                     "  Collection {} count: {} results.",
-                    self.collection.name(),
+                    collection.name(),
                     total
                 );
 
                 return Ok(());
             }
             Function::InsertOne(params) => {
-                let inserted = self
-                    .collection
+                let inserted = collection
                     .insert_one(self.create_document(params)?)
                     .run()
                     .map_err(dbeer::Error::Mongo)?
@@ -233,15 +223,14 @@ impl Mongo {
 
                 println!(
                     "  Collection {}, document inserted with ID: {}",
-                    self.collection.name(),
+                    collection.name(),
                     inserted
                 );
 
                 return Ok(());
             }
             Function::DeleteOne(params) => {
-                let deleted = self
-                    .collection
+                let deleted = collection
                     .delete_one(self.create_document(params)?)
                     .run()
                     .map_err(dbeer::Error::Mongo)?
@@ -249,7 +238,7 @@ impl Mongo {
 
                 println!(
                     "  Collection {}, deleted {} document(s)",
-                    self.collection.name(),
+                    collection.name(),
                     deleted
                 );
 
@@ -258,8 +247,7 @@ impl Mongo {
             Function::UpdateOne(params) => {
                 let (query, set) = Self::get_query_and_set(params)?;
 
-                let modified = self
-                    .collection
+                let modified = collection
                     .update_one(self.create_document(&query)?, self.create_document(&set)?)
                     .run()
                     .map_err(dbeer::Error::Mongo)?
@@ -267,7 +255,7 @@ impl Mongo {
 
                 println!(
                     "  Collection {}, updated {} document(s)",
-                    self.collection.name(),
+                    collection.name(),
                     modified
                 );
 
@@ -284,8 +272,7 @@ impl Mongo {
                     .map(|v| to_document(v).expect("Failed to convert to BSON document"))
                     .collect();
 
-                let inserted = self
-                    .collection
+                let inserted = collection
                     .insert_many(docs)
                     .run()
                     .map_err(dbeer::Error::Mongo)?
@@ -300,15 +287,14 @@ impl Mongo {
 
                 println!(
                     "  Collection {}, documents inserted with ID(s): {}",
-                    self.collection.name(),
+                    collection.name(),
                     inserted
                 );
 
                 return Ok(());
             }
             Function::DeleteMany(params) => {
-                let deleted = self
-                    .collection
+                let deleted = collection
                     .delete_many(self.create_document(params)?)
                     .run()
                     .map_err(dbeer::Error::Mongo)?
@@ -316,7 +302,7 @@ impl Mongo {
 
                 println!(
                     "  Collection {}, deleted {} document(s)",
-                    self.collection.name(),
+                    collection.name(),
                     deleted
                 );
 
@@ -325,8 +311,7 @@ impl Mongo {
             Function::UpdateMany(params) => {
                 let (query, set) = Self::get_query_and_set(params)?;
 
-                let modified = self
-                    .collection
+                let modified = collection
                     .update_many(self.create_document(&query)?, self.create_document(&set)?)
                     .run()
                     .map_err(dbeer::Error::Mongo)?
@@ -334,19 +319,16 @@ impl Mongo {
 
                 println!(
                     "  Collection {}, updated {} document(s)",
-                    self.collection.name(),
+                    collection.name(),
                     modified
                 );
 
                 return Ok(());
             }
             Function::Drop => {
-                self.collection.drop().run().map_err(dbeer::Error::Mongo)?;
+                collection.drop().run().map_err(dbeer::Error::Mongo)?;
 
-                println!(
-                    "  Collection {} dropped successfully.",
-                    self.collection.name(),
-                );
+                println!("  Collection {} dropped successfully.", collection.name(),);
             }
         };
 
@@ -385,6 +367,18 @@ impl Mongo {
 
     #[allow(clippy::result_large_err)]
     pub fn tables(&self) -> dbeer::Result {
+        let collection_names = self
+            .database
+            .list_collections()
+            .run()
+            .map_err(dbeer::Error::Mongo)?
+            .map(|ce| ce.unwrap().name.to_uppercase())
+            .collect::<Vec<String>>()
+            .join(" ");
+
+        dbeer_debug!("Table names: {collection_names}");
+        println!("[{collection_names}]");
+
         Ok(())
     }
 
