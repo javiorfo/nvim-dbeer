@@ -9,4 +9,4 @@ mod table;
 
 pub use border::*;
 pub use error::*;
-pub use table::{Header, Table};
+pub use table::{Format, Header, Table};

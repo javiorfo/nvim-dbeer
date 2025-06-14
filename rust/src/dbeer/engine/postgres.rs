@@ -7,8 +7,8 @@ use postgres::{
 
 use crate::{
     dbeer::{
+        self, Format, Header, Table,
         query::{is_insert_update_or_delete, split_queries},
-        {self, Header, Table},
     },
     dbeer_debug,
 };
@@ -157,7 +157,7 @@ impl super::SqlExecutor for Postgres {
             results.push(msg);
         }
 
-        table.create_execute_result_file(results)
+        table.create_execute_result_file(Format::Standard(results))
     }
 
     fn tables(&mut self) -> dbeer::Result {

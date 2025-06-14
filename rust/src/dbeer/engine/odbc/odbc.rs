@@ -163,7 +163,7 @@ impl SqlExecutor for Odbc {
             results.push(msg);
         }
 
-        table.create_execute_result_file(results)
+        table.create_execute_result_file(dbeer::Format::Standard(results))
     }
 
     fn tables(&mut self) -> crate::dbeer::Result {

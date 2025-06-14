@@ -37,6 +37,11 @@ pub struct Table {
     pub rows: Vec<Vec<String>>,
 }
 
+pub enum Format {
+    Json(Vec<String>),
+    Standard(Vec<String>),
+}
+
 impl Table {
     const DBEER_EXTENSION: &str = "dbeer";
 
@@ -63,8 +68,11 @@ impl Table {
     }
 
     #[allow(clippy::result_large_err)]
-    pub fn create_execute_result_file(&self, results: Vec<String>) -> dbeer::Result {
-        let filepath = self.create_dbeer_file_format();
+    pub fn create_execute_result_file(&self, format: Format) -> dbeer::Result {
+        let (filepath, results) = match format {
+            Format::Standard(results) => (self.create_dbeer_file_format(), results),
+            Format::Json(results) => (self.create_dbeer_mongo_file_format(), results),
+        };
         println!("syn match dbeerStmtErr ' ' | hi link dbeerStmtErr ErrorMsg");
         println!("{filepath}");
 

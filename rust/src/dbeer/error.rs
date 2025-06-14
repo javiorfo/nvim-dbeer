@@ -28,7 +28,7 @@ impl std::fmt::Display for Error {
                 "Odbc error => {}",
                 std::str::from_utf8(e.get_raw_message()).unwrap_or("No info available")
             ),
-            Error::Serde(e) => write!(f, "Serde error => {}", e),
+            Error::Serde(e) => write!(f, "JSON parser error => {}", e),
             Error::Msg(e) => write!(f, "{}", e),
         }
     }
