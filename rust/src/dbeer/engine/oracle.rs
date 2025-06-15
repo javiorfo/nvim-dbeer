@@ -1,35 +1,47 @@
-package engine
+use crate::{
+    dbeer::{self, Table, engine::odbc::Odbc},
+    dbeer_debug,
+};
 
-import (
-	"fmt"
-
-    _ "github.com/sijms/go-ora/v2"
-	"github.com/javiorfo/nvim-dbeer/go/database/engine/model"
-)
-
-type Oracle struct {
-	model.ProtoSQL
+pub struct Oracle {
+    odbc: Odbc,
 }
 
-func (o *Oracle) GetTables() {
-	o.Queries = "select table_name from all_tables where owner = 'PUBLIC' order by table_name;"
-	o.ProtoSQL.GetTables()
+impl Oracle {
+    #[allow(clippy::result_large_err)]
+    pub fn connect(conn_str: &str, queries: &str) -> dbeer::Result<Self> {
+        Ok(Self {
+            odbc: Odbc::new(conn_str, queries)?,
+        })
+    }
 }
 
-func (o *Oracle) GetTableInfo() {
-	db, closer, err := o.GetDB()
-	if err != nil {
-		fmt.Print(err.Error())
-		return
-	}
-	defer closer()
+impl super::SqlExecutor for Oracle {
+    fn select(&mut self, table: &mut Table) -> dbeer::Result {
+        self.odbc.select(table)
+    }
 
-	o.Queries = o.GetTableInfoQuery(o.Queries)
-	o.ExecuteSelect(db)
-}
+    fn execute(&mut self, table: &mut Table) -> dbeer::Result {
+        self.odbc.execute(table)
+    }
 
-func (o *Oracle) GetTableInfoQuery(tableName string) string {
-	return `SELECT 
+    fn tables(&mut self) -> dbeer::Result {
+        self.odbc.queries =
+            "select table_name from all_tables where owner = 'PUBLIC' order by table_name;"
+                .to_string();
+        self.odbc.tables()
+    }
+
+    fn table_info(&mut self, table: &mut Table) -> dbeer::Result {
+        self.odbc.queries = self.table_info_query();
+        dbeer_debug!("Table info query: {}", self.odbc.queries);
+        self.select(table)?;
+        Ok(())
+    }
+
+    fn table_info_query(&self) -> String {
+        format!(
+            r#"SELECT 
                 UPPER(c.column_name) AS column_name,
                 c.data_type,
                 CASE
@@ -61,5 +73,8 @@ func (o *Oracle) GetTableInfoQuery(tableName string) string {
                 LEFT JOIN user_constraints rc ON con.constraint_name = rc.constraint_name 
                     AND con.table_name = rc.table_name AND con.constraint_type = 'R'
                 LEFT JOIN user_cons_columns rcc ON rc.r_constraint_name = rcc.constraint_name
-                WHERE c.table_name = '` + tableName + `';`
+                WHERE c.table_name = '{}';"#,
+            self.odbc.queries
+        )
+    }
 }

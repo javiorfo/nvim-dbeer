@@ -1,35 +1,44 @@
-package engine
+use crate::{
+    dbeer::{self, Table, engine::odbc::Odbc},
+    dbeer_debug,
+};
 
-import (
-	"fmt"
-
-	_ "github.com/denisenkom/go-mssqldb"
-	"github.com/javiorfo/nvim-dbeer/go/database/engine/model"
-)
-
-type MSSql struct {
-	model.ProtoSQL
+pub struct MsSql {
+    odbc: Odbc,
 }
 
-func (ms *MSSql) GetTables() {
-	ms.Queries = "SELECT name AS table_name FROM sys.tables order by name;"
-	ms.ProtoSQL.GetTables()
+impl MsSql {
+    #[allow(clippy::result_large_err)]
+    pub fn connect(conn_str: &str, queries: &str) -> dbeer::Result<Self> {
+        Ok(Self {
+            odbc: Odbc::new(conn_str, queries)?,
+        })
+    }
 }
 
-func (ms *MSSql) GetTableInfo() {
-	db, closer, err := ms.GetDB()
-	if err != nil {
-		fmt.Print(err.Error())
-		return
-	}
-	defer closer()
+impl super::SqlExecutor for MsSql {
+    fn select(&mut self, table: &mut Table) -> dbeer::Result {
+        self.odbc.select(table)
+    }
 
-	ms.Queries = ms.GetTableInfoQuery(ms.Queries)
-	ms.ExecuteSelect(db)
-}
+    fn execute(&mut self, table: &mut Table) -> dbeer::Result {
+        self.odbc.execute(table)
+    }
 
-func (ms *MSSql) GetTableInfoQuery(tableName string) string {
-	return `SELECT 
+    fn tables(&mut self) -> dbeer::Result {
+        self.odbc.queries = "SELECT name AS table_name FROM sys.tables order by name;".to_string();
+        self.odbc.tables()
+    }
+
+    fn table_info(&mut self, table: &mut Table) -> dbeer::Result {
+        self.odbc.queries = self.table_info_query();
+        dbeer_debug!("Table info query: {}", self.odbc.queries);
+        self.select(table)
+    }
+
+    fn table_info_query(&self) -> String {
+        format!(
+            r#"SELECT 
                 UPPER(c.COLUMN_NAME) AS column_name,
                 c.DATA_TYPE,
                 CASE
@@ -70,5 +79,8 @@ func (ms *MSSql) GetTableInfoQuery(tableName string) string {
                 ON rc.UNIQUE_CONSTRAINT_NAME = kcu2.CONSTRAINT_NAME 
                 AND rc.UNIQUE_CONSTRAINT_SCHEMA = kcu2.TABLE_SCHEMA
             WHERE 
-                c.TABLE_NAME = '` + tableName + `';`
+                c.TABLE_NAME = '{}';"#,
+            self.odbc.queries
+        )
+    }
 }

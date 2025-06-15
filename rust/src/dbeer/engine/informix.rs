@@ -1,35 +1,45 @@
-package engine
+use crate::{
+    dbeer::{self, Table, engine::odbc::Odbc},
+    dbeer_debug,
+};
 
-import (
-	"fmt"
-
-    _ "github.com/alexbrainman/odbc"
-	"github.com/javiorfo/nvim-dbeer/go/database/engine/model"
-)
-
-type Informix struct {
-	model.ProtoSQL
+pub struct Informix {
+    odbc: Odbc,
 }
 
-func (i *Informix) GetTables() {
-	i.Queries = "SELECT tabname FROM systables WHERE tabtype = 'T' order by tabname;"
-	i.ProtoSQL.GetTables()
+impl Informix {
+    #[allow(clippy::result_large_err)]
+    pub fn connect(conn_str: &str, queries: &str) -> dbeer::Result<Self> {
+        Ok(Self {
+            odbc: Odbc::new(conn_str, queries)?,
+        })
+    }
 }
 
-func (i *Informix) GetTableInfo() {
-	db, closer, err := i.GetDB()
-	if err != nil {
-		fmt.Print(err.Error())
-		return
-	}
-	defer closer()
+impl super::SqlExecutor for Informix {
+    fn select(&mut self, table: &mut Table) -> dbeer::Result {
+        self.odbc.select(table)
+    }
 
-	i.Queries = i.GetTableInfoQuery(i.Queries)
-	i.ExecuteSelect(db)
-}
+    fn execute(&mut self, table: &mut Table) -> dbeer::Result {
+        self.odbc.execute(table)
+    }
 
-func (i *Informix) GetTableInfoQuery(tableName string) string {
-	return `SELECT
+    fn tables(&mut self) -> dbeer::Result {
+        self.odbc.queries =
+            "SELECT tabname FROM systables WHERE tabtype = 'T' order by tabname;".to_string();
+        self.odbc.tables()
+    }
+
+    fn table_info(&mut self, table: &mut Table) -> dbeer::Result {
+        self.odbc.queries = self.table_info_query();
+        dbeer_debug!("Table info query: {}", self.odbc.queries);
+        self.select(table)
+    }
+
+    fn table_info_query(&self) -> String {
+        format!(
+            r#"SELECT
                 UPPER(col.colname) AS column_name,
                 CASE
                     WHEN MOD(col.coltype,256)=1 THEN 'smallint'
@@ -93,5 +103,8 @@ func (i *Informix) GetTableInfoQuery(tableName string) string {
             LEFT JOIN sysconstraints AS cons ON idx.idxname = cons.idxname AND tab.tabid = cons.tabid
             LEFT JOIN sysreferences AS sr ON cons.constrid = sr.constrid
             LEFT JOIN systables AS srtab ON srtab.tabid = sr.ptabid
-            WHERE tab.tabname = '` + tableName + `';`
+            WHERE tab.tabname = '{}';"#,
+            self.odbc.queries
+        )
+    }
 }

@@ -73,7 +73,12 @@ function M.run()
         speed_ms = 200,
         spinner = util.get_numeral_sprinner(),
         on_success = function()
-            util.logger:debug(vim.inspect(result))
+            util.logger:debug("results from backend: ", vim.inspect(result))
+            if #result == 0 then
+                util.logger:error("Internal error")
+                return
+            end
+
             if string.sub(result[1], 1, 7) ~= "[ERROR]" then
                 if result[2] then
                     vim.cmd(string.format("%dsp %s", setup.output.buffer_height, result[2]))
@@ -120,8 +125,8 @@ function M.run()
 end
 
 function M.build()
-    if vim.fn.executable("go") == 0 then
-        util.logger:warn("Go is required. Install it to use this plugin and then execute manually :dbeerBuild")
+    if vim.fn.executable("cargo") == 0 then
+        util.logger:warn("Cargo (Rust) is required. Install it to use this plugin and then execute manually :dbeerBuild")
         return false
     end
 
@@ -131,10 +136,10 @@ function M.build()
         root_path,
         root_path, util.dbeer_log_file)
     local spinner = spinetta:new {
-        main_msg = "  DBeer   Building plugin... ",
+        main_msg = "  DBeer   Building plugin... Rust build could take some time ",
         speed_ms = 100,
         on_success = function()
-            util.logger:info("  DBeer is ready to be used!")
+            util.logger:info("  Plugin ready to be used!")
         end
     }
 
