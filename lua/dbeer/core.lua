@@ -125,8 +125,8 @@ function M.run()
 end
 
 function M.build()
-    if vim.fn.executable("go") == 0 then
-        util.logger:warn("Go is required. Install it to use this plugin and then execute manually :dbeerBuild")
+    if vim.fn.executable("cargo") == 0 then
+        util.logger:warn("Cargo (Rust) is required. Install it to use this plugin and then execute manually :dbeerBuild")
         return false
     end
 
@@ -136,7 +136,7 @@ function M.build()
         root_path,
         root_path, util.dbeer_log_file)
     local spinner = spinetta:new {
-        main_msg = "  DBeer   Building plugin (Rust build could take some time)... ",
+        main_msg = "  DBeer   Building plugin... Rust build could take some time ",
         speed_ms = 100,
         on_success = function()
             util.logger:info("  Plugin ready to be used!")

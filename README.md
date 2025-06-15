@@ -257,10 +257,10 @@ opts = {
     - [x] "findOne" with filters
     - [x] "insertOne"
     - [x] "deleteOne"
-    - [x] "updateOne"
+    - [x] "updateOne" (only with $set)
     - [x] "insertMany"
     - [x] "deleteMany"
-    - [x] "updateMany"
+    - [x] "updateMany" (only with $set)
     - [x] "drop" (drop collection)
     - [ ] Indexes operations
     - [ ] Replace operations
@@ -269,7 +269,7 @@ opts = {
 - [ ] Comments (queries with comments could not be processed)
 - [ ] Execution of multiple semicolon-separated queries
 - [x] Command to list collections
-- [x] Command to get collection info (fields, data type, etc)
+- [ ] Command to get collection info (fields, data type, etc)
 
 ##### Example
 ```javascript

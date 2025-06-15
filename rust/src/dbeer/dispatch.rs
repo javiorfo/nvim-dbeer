@@ -64,7 +64,11 @@ pub fn process(command: Command, engine_type: Type) -> dbeer::Result {
                     ..Table::default()
                 })?,
                 Action::Tables => mongo.tables()?,
-                Action::TableInfo => mongo.table_info()?,
+                Action::TableInfo => {
+                    return Err(dbeer::Error::Msg(
+                        "Collection info not implemented for MongoDB".to_string(),
+                    ));
+                }
             }
         }
         Type::Neo4j => return Err(dbeer::Error::Msg("Neo4j not implemented yet".to_string())),

@@ -143,6 +143,8 @@ impl Mongo {
 
         let collection: Collection<Document> = self.database.collection(collection_name);
 
+        dbeer_debug!("Collection {}. Function {:#?}", collection_name, function);
+
         match &function {
             Function::Find(params, sub_function) => {
                 let cursor = match sub_function {
@@ -167,6 +169,8 @@ impl Mongo {
                         .map_err(dbeer::Error::Mongo)?,
                 };
 
+                dbeer_debug!("Cursor {:#?}", cursor);
+
                 let mut results = Vec::new();
                 for result in cursor {
                     let json_str =
@@ -180,7 +184,7 @@ impl Mongo {
                     return Ok(());
                 }
 
-                table.create_execute_result_file(dbeer::Format::Json(results))?
+                table.create_execute_result_file(dbeer::Format::Json(results))
             }
             Function::FindOne(params) => {
                 let document = collection
@@ -196,7 +200,7 @@ impl Mongo {
                 let json_str = serde_json::to_string_pretty(&document.unwrap())
                     .map_err(dbeer::Error::Serde)?;
 
-                table.create_execute_result_file(dbeer::Format::Json(vec![json_str]))?
+                table.create_execute_result_file(dbeer::Format::Json(vec![json_str]))
             }
             Function::CountDocuments(params) => {
                 let total = collection
@@ -210,7 +214,7 @@ impl Mongo {
                     total
                 );
 
-                return Ok(());
+                Ok(())
             }
             Function::InsertOne(params) => {
                 let inserted = collection
@@ -227,7 +231,7 @@ impl Mongo {
                     inserted
                 );
 
-                return Ok(());
+                Ok(())
             }
             Function::DeleteOne(params) => {
                 let deleted = collection
@@ -242,7 +246,7 @@ impl Mongo {
                     deleted
                 );
 
-                return Ok(());
+                Ok(())
             }
             Function::UpdateOne(params) => {
                 let (query, set) = Self::get_query_and_set(params)?;
@@ -259,7 +263,7 @@ impl Mongo {
                     modified
                 );
 
-                return Ok(());
+                Ok(())
             }
             Function::InsertMany(params) => {
                 let parsed_json: Value =
@@ -291,7 +295,7 @@ impl Mongo {
                     inserted
                 );
 
-                return Ok(());
+                Ok(())
             }
             Function::DeleteMany(params) => {
                 let deleted = collection
@@ -306,7 +310,7 @@ impl Mongo {
                     deleted
                 );
 
-                return Ok(());
+                Ok(())
             }
             Function::UpdateMany(params) => {
                 let (query, set) = Self::get_query_and_set(params)?;
@@ -323,20 +327,22 @@ impl Mongo {
                     modified
                 );
 
-                return Ok(());
+                Ok(())
             }
             Function::Drop => {
                 collection.drop().run().map_err(dbeer::Error::Mongo)?;
 
-                println!("  Collection {} dropped successfully.", collection.name(),);
-            }
-        };
+                println!("  Collection {} dropped successfully.", collection.name());
 
-        Ok(())
+                Ok(())
+            }
+        }
     }
 
     #[allow(clippy::result_large_err)]
     fn create_document(&self, filter: &str) -> dbeer::Result<Document> {
+        dbeer_debug!("create_document filter {}", filter);
+
         if filter.is_empty() {
             Ok(Document::new())
         } else {
@@ -349,6 +355,8 @@ impl Mongo {
 
     #[allow(clippy::result_large_err)]
     fn get_query_and_set(filter: &str) -> dbeer::Result<(String, String)> {
+        dbeer_debug!("get_query_and_set filter {}", filter);
+
         Ok(match filter.find("$set") {
             Some(set_pos) => {
                 let start_second_json = filter[..set_pos].rfind('{').unwrap_or(0);
@@ -379,11 +387,6 @@ impl Mongo {
         dbeer_debug!("Table names: {collection_names}");
         println!("[{collection_names}]");
 
-        Ok(())
-    }
-
-    #[allow(clippy::result_large_err)]
-    pub fn table_info(&self) -> dbeer::Result {
         Ok(())
     }
 }
