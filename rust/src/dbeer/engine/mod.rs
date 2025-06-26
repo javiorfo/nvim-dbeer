@@ -53,5 +53,3 @@ pub trait SqlExecutor {
 
     fn table_info_query(&self) -> String;
 }
-
-pub trait _NoSqlExecutor {}

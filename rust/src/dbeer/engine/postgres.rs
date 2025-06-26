@@ -194,8 +194,12 @@ impl super::SqlExecutor for Postgres {
                     ELSE ' '
                 END AS not_null,
                 CASE
-                    WHEN c.character_maximum_length IS NULL THEN '-'
-                    ELSE CAST(c.character_maximum_length AS CHAR)
+                    WHEN c.data_type IN ('character varying', 'varchar', 'character', 'char') THEN 
+                        CAST(c.character_maximum_length AS CHAR)
+                    WHEN c.data_type IN ('numeric', 'decimal') THEN 
+                        CAST(c.numeric_precision AS CHAR) || 
+                        CASE WHEN c.numeric_scale IS NOT NULL THEN '.' || CAST(c.numeric_scale AS CHAR) ELSE '' END
+                    ELSE '-'
                 END AS length,
                 CASE  
                     WHEN tc.constraint_type = 'PRIMARY KEY' THEN '  PRIMARY KEY'
