@@ -25,8 +25,7 @@ impl Postgres {
             queries: queries.to_string(),
             client: Client::connect(conn_str, NoTls).map_err(|_| {
                 dbeer::Error::Msg(format!(
-                    "Error connecting Postgres. Connection string: {}",
-                    conn_str
+                    "Error connecting Postgres. Connection string: {conn_str}"
                 ))
             })?,
         })
@@ -48,7 +47,7 @@ impl Postgres {
                 Type::TIMESTAMP => Self::value_or_null::<chrono::NaiveDateTime>(row, i),
                 Type::TIMESTAMPTZ => Self::value_or_null::<chrono::DateTime<chrono::Utc>>(row, i),
                 Type::INT4_ARRAY => match row.try_get::<_, Option<Vec<i32>>>(i).ok().flatten() {
-                    Some(arr) => format!("{:?}", arr),
+                    Some(arr) => format!("{arr:?}"),
                     None => "NULL".to_string(),
                 },
                 ref unknown_type => {
@@ -111,7 +110,7 @@ impl super::SqlExecutor for Postgres {
             }
 
             for (column_index, value) in string_values.iter().enumerate() {
-                columns.push(format!(" {}", value));
+                columns.push(format!(" {value}"));
                 let column = headers.get_mut(&(column_index + 2)).unwrap();
                 let length = value.chars().count() + 2;
                 if column.length < length {

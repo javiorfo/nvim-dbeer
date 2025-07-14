@@ -23,7 +23,7 @@ fn main() {
             "-border-style" => command.border_style = args[i + 1].clone().into(),
             "-dest-folder" => command.dest_folder = args[i + 1].clone(),
             "-dbeer-log-file" => dbeer_log_file = args[i + 1].clone(),
-            "-option" => command.action = args[i + 1].clone().into(), // TODO action in Lua
+            "-option" => command.action = args[i + 1].clone().into(), // action in Lua
             "-header-style-link" => command.header_style_link = args[i + 1].clone(),
             "-log-debug" => log_debug = args[i + 1].clone().parse().unwrap_or(log_debug),
             _ => break,
@@ -38,7 +38,7 @@ fn main() {
 
     let engine_type = command.engine.clone();
     if let Err(e) = process(command, engine_type.into()) {
-        let error_msg = format!("[ERROR] {}", e);
+        let error_msg = format!("[ERROR] {e}");
         println!("{error_msg}");
         dbeer_error!("{error_msg}");
     }

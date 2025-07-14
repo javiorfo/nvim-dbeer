@@ -26,8 +26,7 @@ impl MySql {
             db_name: db_name.to_string(),
             connection: pool.get_conn().map_err(|_| {
                 dbeer::Error::Msg(format!(
-                    "Error connecting MySQL. Connection string: {}",
-                    conn_str
+                    "Error connecting MySQL. Connection string: {conn_str}"
                 ))
             })?,
         })
@@ -66,7 +65,7 @@ impl super::SqlExecutor for MySql {
 
             for column_index in 0..results_columns.len() {
                 let value: String = row_value.get(column_index).unwrap_or("NULL".to_string());
-                columns.push(format!(" {}", value));
+                columns.push(format!(" {value}"));
                 let column = headers.get_mut(&(column_index + 2)).unwrap();
                 let length = value.chars().count() + 2;
                 if column.length < length {

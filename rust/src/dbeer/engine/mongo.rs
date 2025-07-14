@@ -69,8 +69,7 @@ impl Function {
             "drop" => Function::Drop,
             _ => {
                 return Err(dbeer::Error::Msg(format!(
-                    "MongoDB function not supported: {}",
-                    fn_str
+                    "MongoDB function not supported: {fn_str}"
                 )));
             }
         };
@@ -85,11 +84,11 @@ impl Function {
         } else {
             Regex::new(r"^([^()]+)\(([^()]*)\)$")
         }
-        .map_err(|e| dbeer::Error::Msg(format!("Regex error: {}", e)))?;
+        .map_err(|e| dbeer::Error::Msg(format!("Regex error: {e}")))?;
 
-        let caps = re.captures(value).ok_or_else(|| {
-            dbeer::Error::Msg(format!("MongoDB function not supported: {}", value))
-        })?;
+        let caps = re
+            .captures(value)
+            .ok_or_else(|| dbeer::Error::Msg(format!("MongoDB function not supported: {value}")))?;
 
         let function = &caps[1];
         let params = &caps[2];
@@ -126,7 +125,7 @@ impl Mongo {
                     parts[1],
                     Function::from(
                         parts.get(2).ok_or_else(|| {
-                            dbeer::Error::Msg(format!("Error parsing function {:?}", parts))
+                            dbeer::Error::Msg(format!("Error parsing function {parts:?}"))
                         })?,
                         parts.get(3).copied(),
                     )?,

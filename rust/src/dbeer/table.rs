@@ -173,7 +173,7 @@ impl Table {
         let mut writer = BufWriter::new(file);
 
         for v in strings {
-            let line = format!("{}\n", v);
+            let line = format!("{v}\n");
             writer
                 .write_all(line.as_bytes())
                 .map_err(dbeer::Error::Io)?;

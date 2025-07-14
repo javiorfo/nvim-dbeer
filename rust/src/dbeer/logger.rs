@@ -26,7 +26,7 @@ impl Logger {
 
     fn log(&self, level: &str, message: &str) {
         let timestamp = Local::now().format(DATE_FORMAT).to_string();
-        let log_line = format!("[{}] [{}] [RUST] {}\n", level, timestamp, message);
+        let log_line = format!("[{level}] [{timestamp}] [RUST] {message}\n");
 
         if let Ok(mut writer) = self.writer.lock() {
             let _ = writer.write_all(log_line.as_bytes());
@@ -50,14 +50,14 @@ pub fn logger_init<P: AsRef<Path>>(
 pub fn debug(args: std::fmt::Arguments) {
     if let Some(logger) = LOGGER.lock().unwrap().as_ref() {
         if logger.log_debug_enabled {
-            logger.log("DEBUG", &format!("{}", args));
+            logger.log("DEBUG", &format!("{args}"));
         }
     }
 }
 
 pub fn error(args: std::fmt::Arguments) {
     if let Some(logger) = LOGGER.lock().unwrap().as_ref() {
-        logger.log("ERROR", &format!("{}", args));
+        logger.log("ERROR", &format!("{args}"));
     }
 }
 

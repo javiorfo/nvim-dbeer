@@ -27,8 +27,7 @@ pub fn process(command: Command, engine_type: Type) -> dbeer::Result {
                 "sqlite" => Box::new(Sqlite::connect(&command.db_name, &queries)?),
                 not_supported => {
                     return Err(dbeer::Error::Msg(format!(
-                        "Engine {} is not supported",
-                        not_supported
+                        "Engine {not_supported} is not supported"
                     )));
                 }
             };

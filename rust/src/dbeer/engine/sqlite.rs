@@ -43,7 +43,7 @@ impl super::SqlExecutor for Sqlite {
         let mut counter = 1;
         while let Ok(State::Row) = stmt.next() {
             let mut columns = Vec::with_capacity(headers.len());
-            let id_column = format!(" #{}", counter);
+            let id_column = format!(" #{counter}");
             let id_column_length = id_column.len() + 1;
             columns.push(id_column);
 
@@ -55,7 +55,7 @@ impl super::SqlExecutor for Sqlite {
 
             for i in 0..stmt.column_count() {
                 let value: String = stmt.read(i).unwrap_or("NULL".to_string());
-                columns.push(format!(" {}", value));
+                columns.push(format!(" {value}"));
                 let column = headers.get_mut(&(i + 2)).unwrap();
                 let length = value.chars().count() + 2;
                 if column.length < length {

@@ -17,19 +17,19 @@ pub type Result<T = ()> = std::result::Result<T, Error>;
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::Io(e) => write!(f, "IO error => {}", e),
-            Error::Postgres(e) => write!(f, "Postgres error => {}", e),
-            Error::Mongo(e) => write!(f, "Mongo error => {}", e),
-            Error::Bson(e) => write!(f, "Bson error => {}", e),
-            Error::MySql(e) => write!(f, "MySql error => {}", e),
-            Error::Sqlite(e) => write!(f, "Sqlite error => {}", e),
+            Error::Io(e) => write!(f, "IO error => {e}"),
+            Error::Postgres(e) => write!(f, "Postgres error => {e}"),
+            Error::Mongo(e) => write!(f, "Mongo error => {e}"),
+            Error::Bson(e) => write!(f, "Bson error => {e}"),
+            Error::MySql(e) => write!(f, "MySql error => {e}"),
+            Error::Sqlite(e) => write!(f, "Sqlite error => {e}"),
             Error::Odbc(e) => write!(
                 f,
                 "Odbc error => {}",
                 std::str::from_utf8(e.get_raw_message()).unwrap_or("No info available")
             ),
-            Error::Serde(e) => write!(f, "JSON parser error => {}", e),
-            Error::Msg(e) => write!(f, "{}", e),
+            Error::Serde(e) => write!(f, "JSON parser error => {e}"),
+            Error::Msg(e) => write!(f, "{e}"),
         }
     }
 }

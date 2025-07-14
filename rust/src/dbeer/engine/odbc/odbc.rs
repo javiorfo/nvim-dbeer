@@ -69,7 +69,7 @@ impl SqlExecutor for Odbc {
 
                 while let Some(mut cursor) = stmt.fetch().map_err(dbeer::Error::Odbc)? {
                     let mut columns = Vec::with_capacity(headers.len());
-                    let id_column = format!(" #{}", col_counter);
+                    let id_column = format!(" #{col_counter}");
                     let id_column_length = id_column.len() + 1;
                     columns.push(id_column);
 
@@ -81,14 +81,14 @@ impl SqlExecutor for Odbc {
 
                     for i in 1..=columns_len {
                         let value = if let Some(value) = cursor
-                            .get_data::<&str>(i as u16)
+                            .get_data::<String>(i as u16)
                             .map_err(dbeer::Error::Odbc)?
                         {
-                            columns.push(format!(" {}", value));
+                            columns.push(format!(" {value}"));
                             value
                         } else {
                             columns.push(" NULL".to_string());
-                            "NULL"
+                            "NULL".to_string()
                         };
 
                         let column = headers.get_mut(&(i as usize + 1)).unwrap();
@@ -129,7 +129,7 @@ impl SqlExecutor for Odbc {
             };
 
             if is_insert_update_or_delete(query) {
-                println!("  Row(s) affected: {}", affected_rows);
+                println!("  Row(s) affected: {affected_rows}");
             } else {
                 println!("  Statement executed correctly.");
             }
