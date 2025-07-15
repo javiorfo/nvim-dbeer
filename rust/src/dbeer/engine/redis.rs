@@ -40,6 +40,7 @@ enum Command<'a> {
 
 impl<'a> Command<'a> {
     const GET: &'a str = "GET";
+    const SET: &'a str = "SET";
     const DEL: &'a str = "DEL";
     const EXISTS: &'a str = "EXISTS";
     const EXPIRE: &'a str = "EXPIRE";
@@ -52,24 +53,29 @@ impl<'a> Command<'a> {
         match self {
             Self::Get(key) => {
                 let result: Option<String> = connection.get(key)?;
-                println!("Key '{key}' is {}", result.unwrap_or("nil".to_string()));
+                println!("Key '{key}' is '{}'", result.unwrap_or("nil".to_string()));
                 Ok(())
             }
             Self::Del(keys) => {
                 let result: i32 = connection.del(keys)?;
-                println!("{result} has been deleted!");
+                println!("{result} key(s) have been deleted.");
                 Ok(())
             }
             Self::Expire { key, seconds } => {
                 let _: () = connection.expire(key, *seconds)?;
-                println!("Key '{key}' has been set with expiration of {seconds}s!");
+                println!("Key '{key}' has been set with expiration of {seconds}s");
+                Ok(())
+            }
+            Self::Set { key, value } => {
+                let _: () = connection.set(key, value)?;
+                println!("  Key '{key}' has been set with '{value}'");
                 Ok(())
             }
             Self::Exists(key) => {
                 let result: bool = connection.exists(key)?;
                 println!(
                     "Key '{key}' {}",
-                    if result { "exists" } else { "does not exist" }
+                    if result { "exists." } else { "does not exist." }
                 );
                 Ok(())
             }
@@ -91,7 +97,6 @@ impl<'a> Command<'a> {
                 println!("  All Keys have been deleted.");
                 Ok(())
             }
-            _ => unreachable!(),
         }
     }
 
@@ -153,6 +158,29 @@ impl<'a> Command<'a> {
                     })?;
 
                 Ok(Self::Expire { key, seconds })
+            };
+        }
+
+        if queries.starts_with(Self::SET) {
+            let values = queries.strip_prefix(Self::SET).unwrap().trim();
+            return if values.is_empty() {
+                Err(dbeer::Error::Msg("values are empty".to_string()))
+            } else {
+                let values = values
+                    .splitn(2, " ")
+                    .map(|key| key.trim())
+                    .collect::<Vec<&str>>();
+
+                let key = values
+                    .first()
+                    .ok_or(dbeer::Error::Msg("key is empty".to_string()))?;
+
+                let value = values
+                    .get(1)
+                    .ok_or(dbeer::Error::Msg("Missing second value".to_string()))?
+                    .trim_matches('"');
+
+                Ok(Self::Set { key, value })
             };
         }
 

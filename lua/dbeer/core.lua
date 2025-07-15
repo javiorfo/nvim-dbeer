@@ -70,7 +70,7 @@ function M.run()
     end
 
     local dest_folder = setup.output.dest_folder
-    local format_query = (conn.engine == "mongo" and "'%s'") or '\"%s\"'
+    local format_query = ((conn.engine == "mongo" or conn.engine == "redis") and "'%s'") or '\"%s\"'
     local script = string.format(
         "%s -engine %s -conn-str \"%s\" -queries " ..
         format_query ..
