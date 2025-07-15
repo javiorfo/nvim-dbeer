@@ -2,7 +2,9 @@ use super::command::Action;
 use crate::dbeer::{
     self,
     command::Command,
-    engine::{Db2, Informix, Mongo, MsSql, MySql, Oracle, Postgres, SqlExecutor, Sqlite, Type},
+    engine::{
+        Db2, Informix, Mongo, MsSql, MySql, Oracle, Postgres, Redis, SqlExecutor, Sqlite, Type,
+    },
     query::{is_select_query, strip_sql_comments},
     table::Table,
 };
@@ -70,8 +72,17 @@ pub fn process(command: Command, engine_type: Type) -> dbeer::Result {
                 }
             }
         }
+        Type::Redis => {
+            let mut redis = Redis::connect(&command.conn_str, &command.queries)?;
+
+            match command.action {
+                Action::Run => redis.run()?,
+                _ => {
+                    return Err(dbeer::Error::Msg("Not applicable for Redis".to_string()));
+                }
+            }
+        }
         Type::Neo4j => return Err(dbeer::Error::Msg("Neo4j not implemented yet".to_string())),
-        Type::Redis => return Err(dbeer::Error::Msg("Redis not implemented yet".to_string())),
     }
 
     Ok(())

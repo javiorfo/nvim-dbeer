@@ -7,9 +7,16 @@ pub enum Error {
     Bson(mongodb::bson::ser::Error),
     MySql(mysql::Error),
     Odbc(odbc::DiagnosticRecord),
+    Redis(redis::RedisError),
     Sqlite(sqlite::Error),
     Serde(serde_json::Error),
     Msg(String),
+}
+
+impl From<redis::RedisError> for Error {
+    fn from(value: redis::RedisError) -> Self {
+        Self::Redis(value)
+    }
 }
 
 pub type Result<T = ()> = std::result::Result<T, Error>;
@@ -23,6 +30,7 @@ impl std::fmt::Display for Error {
             Error::Bson(e) => write!(f, "Bson error => {e}"),
             Error::MySql(e) => write!(f, "MySql error => {e}"),
             Error::Sqlite(e) => write!(f, "Sqlite error => {e}"),
+            Error::Redis(e) => write!(f, "Redis error => {e}"),
             Error::Odbc(e) => write!(
                 f,
                 "Odbc error => {}",
@@ -43,6 +51,7 @@ impl std::error::Error for Error {
             Error::Bson(e) => Some(e),
             Error::MySql(e) => Some(e),
             Error::Sqlite(e) => Some(e),
+            Error::Redis(e) => Some(e),
             Error::Odbc(e) => Some(e),
             Error::Serde(e) => Some(e),
             Error::Msg(_) => None,
