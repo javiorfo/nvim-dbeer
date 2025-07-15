@@ -13,4 +13,4 @@ mkdir -p $BIN
 
 mv $ROOT/rust/target/release/dbeer $BIN
 
-# (cd $ROOT/rust && cargo clean)
+(cd $ROOT/rust && cargo clean)
