@@ -170,12 +170,23 @@ function M.setup(opts)
     })
 
     vim.api.nvim_create_autocmd("BufEnter", {
+        pattern = "*.rdb",
+        callback = function()
+            local db = M.SETTINGS.db
+            if db.connections then
+                local connection = db.connections[require 'dbeer'.default_db]
+                map_or_unmap(connection, connection.engine == "redis")
+            end
+        end,
+    })
+
+    vim.api.nvim_create_autocmd("BufEnter", {
         pattern = "*.sql",
         callback = function()
             local db = M.SETTINGS.db
             if db.connections then
                 local connection = db.connections[require 'dbeer'.default_db]
-                map_or_unmap(connection, connection.engine ~= "mongo")
+                map_or_unmap(connection, connection.engine ~= "mongo" and connection.engine ~= "redis")
             end
         end,
     })

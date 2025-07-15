@@ -28,7 +28,7 @@ end
 
 function M:debug(msg)
     local util = require 'dbeer.util'
-    if require'dbeer'.SETTINGS.internal.log_debug then
+    if require 'dbeer'.SETTINGS.internal.log_debug then
         local file = io.open(util.dbeer_log_file, "a")
         if file then
             file:write(string.format("%s %s\n", util.debug_header, msg))

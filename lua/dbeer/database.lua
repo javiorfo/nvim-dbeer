@@ -1,11 +1,13 @@
-local popcorn = require 'popcorn'
-local borders = require 'popcorn.borders'
-local constants = require 'dbeer.constants'
-local engines = require 'dbeer.engines'
-local setup = require 'dbeer'.SETTINGS
-local util = require 'dbeer.util'
+local popcorn        = require 'popcorn'
+local borders        = require 'popcorn.borders'
+local engines        = require 'dbeer.engines'
+local setup          = require 'dbeer'.SETTINGS
+local util           = require 'dbeer.util'
 
-local M = {}
+local checked_icon   = " 󰐾  "
+local unchecked_icon = "    "
+
+local M              = {}
 
 function M.show()
     local content = {}
@@ -14,9 +16,9 @@ function M.show()
     if db.connections then
         content = { { "󰆼 Database", "Type" } }
         for i, v in pairs(db.connections) do
-            local name = constants.UNCHECKED_ICON .. v.name
+            local name = unchecked_icon .. v.name
             if i == default then
-                name = constants.CHECKED_ICON .. v.name
+                name = checked_icon .. v.name
             end
             table.insert(content, { name })
         end
@@ -73,14 +75,14 @@ local function select_or_unselect(lines, line_nr)
     for _, v in pairs(lines) do
         if v == line_nr then
             local selected = vim.fn.getline('.')
-            local final = tostring(selected):gsub(constants.UNCHECKED_ICON, constants.CHECKED_ICON)
+            local final = tostring(selected):gsub(unchecked_icon, checked_icon)
             vim.fn.setline(line_nr, final)
             require 'dbeer'.default_db = v - 1
             local connection = setup.db.connections[v - 1]
             util.logger:info(string.format("Database set to [%s]", connection.name))
         else
             local unselected = vim.fn.getline(v)
-            local final = tostring(unselected):gsub(constants.CHECKED_ICON, constants.UNCHECKED_ICON)
+            local final = tostring(unselected):gsub(checked_icon, unchecked_icon)
             vim.fn.setline(v, final)
         end
     end
@@ -103,7 +105,7 @@ end
 function M.expand()
     local line_nr = vim.fn.line('.')
     local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
-    if string.find(lines[line_nr], constants.CHECKED_ICON) or string.find(lines[line_nr], constants.UNCHECKED_ICON) then
+    if string.find(lines[line_nr], checked_icon) or string.find(lines[line_nr], unchecked_icon) then
         vim.cmd [[setl ma]]
         if lines[line_nr + 1] == "     󱘖 Connection Data" then
             for _ = 0, 8 do
@@ -112,7 +114,7 @@ function M.expand()
         else
             table.insert(lines, line_nr + 1, "     󱘖 Connection Data")
             local connection = {}
-            local connection_name = lines[line_nr]:gsub(constants.UNCHECKED_ICON, ""):gsub(constants.CHECKED_ICON, "")
+            local connection_name = lines[line_nr]:gsub(unchecked_icon, ""):gsub(checked_icon, "")
 
             for _, v in ipairs(setup.db.connections) do
                 if v.name == connection_name then

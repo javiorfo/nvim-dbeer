@@ -20,7 +20,7 @@
 | Neo4j | :x: | Rust Native | Future release |
 | Oracle | :heavy_check_mark: | ODBC | Supported operations detailed [here](#sql) |
 | PostgreSQL | :heavy_check_mark: | Rust Native | Supported operations detailed [here](#sql) |
-| Redis | :x: | Rust Native | Future release |
+| Redis | :heavy_check_mark: | Rust Native | Supported operations detailed [here](#redis) |
 | SQLite | :heavy_check_mark: | Rust Native | Supported operations detailed [here](#sql) |
 
 
@@ -56,7 +56,7 @@
     },
     lazy = true,
     cmd = { "DBeerBuild" },
-    ft = { "sql", "javascript" }, -- javascript if MongoDB is used
+    ft = { "sql", "javascript", "redis" }, -- javascript (MongoDB), redis (.rdb file)
     build = function()
         -- Update the backend in every plugin change
         require'dbeer.core'.build()
@@ -148,7 +148,7 @@
 #### Configure DB connections and credentials
 - In the `setup` show above there is a section left out to be configured by the user (**connections** inside **db** table).
 - Here are some examples of different DB configurations
-- Engines possible values are: **mongo, postgres, oracle, mysql, sqlite, mssql, db2** and **informix**.
+- Engines possible values are: **mongo, postgres, oracle, mysql, sqlite, redis, mssql, db2** and **informix**.
 
 `Lazy`
 ```lua
@@ -202,6 +202,13 @@ opts = {
                 user = "admin",
                 password = "admin",
             },
+            {
+                name = "Redis example",
+                engine = "redis", 
+                dbname = "1",
+                user = "admin",
+                password = "admin",
+            },
             -- IBM Informix needs ODBC connection configured (check unix ODBC docs for this)
             {
                 name = "Informix example",
@@ -250,6 +257,26 @@ opts = {
 - [x] Command to list tables
 - [x] Command to get table info (fields, pk, fk, data type, etc)
 
+### Redis
+- Using *.rdb* file extension
+- Operations
+    - [x] "GET"
+    - [x] "SET"
+    - [x] "DEL" one of multiple
+    - [x] "EXISTS"
+    - [x] "KEYS" pattern
+    - [x] "EXPIRE" with seconds
+    - [x] "TTL"
+    - [x] "FLUSHALL"
+    - [ ] String operations
+    - [ ] List operations
+    - [ ] Hash operations
+    - [ ] Sorted operations
+- [ ] Comments (queries with comments could not be processed)
+- [ ] Execution of multiple semicolon-separated queries
+- [ ] Command to list collections
+- [ ] Command to get collection info (fields, data type, etc)
+
 ### NoSql
 - Operations
     - [x] "find" with filters and subsequent "sort", "skip" or "limit"
@@ -270,6 +297,7 @@ opts = {
 - [ ] Execution of multiple semicolon-separated queries
 - [x] Command to list collections
 - [ ] Command to get collection info (fields, data type, etc)
+
 
 ##### Example
 ```javascript

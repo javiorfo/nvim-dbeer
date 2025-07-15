@@ -4,6 +4,20 @@ local util = require 'dbeer.util'
 local spinetta = require 'spinetta'
 local M = {}
 
+function M.init_msg()
+    local db = setup.db
+    local logger = require 'dbeer.util'.logger
+
+    if db.connections then
+        local connection = db.connections[require 'dbeer'.default_db]
+        if connection.name and connection.dbname and connection.engine and require 'dbeer.engines'.db[connection.engine] then
+            logger:info(string.format("Database set to [%s]", connection.name))
+        end
+    else
+        logger:info("No database configured.")
+    end
+end
+
 function M.get_connection_string()
     local db = setup.db
     if db.connections then

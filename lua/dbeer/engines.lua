@@ -3,6 +3,7 @@ local util = require 'dbeer.util'
 local host = "127.0.0.1"
 local default_posgres_port = "5432"
 local default_mongo_port = "27017"
+local default_redis_port = "6379"
 local default_mysql_port = "3306"
 local exe = util.dbeer_root_path .. "bin/dbeer"
 
@@ -57,6 +58,20 @@ return {
                     connection.password and ":" .. connection.password .. "@" or "",
                     connection.host or host,
                     connection.port or default_mongo_port
+                )
+            end
+        },
+        redis = {
+            title = "Redis",
+            default_port = default_redis_port,
+            default_host = host,
+            executor = exe,
+            get_connection_string = function(connection)
+                return string.format("redis://%s%s%s:%s",
+                    connection.user and connection.user or "",
+                    connection.password and ":" .. connection.password .. "@" or "",
+                    connection.host or host,
+                    connection.port or default_redis_port
                 )
             end
         },
