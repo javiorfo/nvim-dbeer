@@ -106,6 +106,11 @@ impl SqlExecutor for Odbc {
             }
         }
 
+        if rows.is_empty() {
+            println!("  Query has returned 0 results.");
+            return Ok(());
+        }
+
         table.update_headers_and_rows(headers, rows)
     }
 
