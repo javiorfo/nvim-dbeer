@@ -4,6 +4,7 @@ use postgres::{
     Client, NoTls, Row,
     types::{FromSql, Type},
 };
+use rust_decimal::Decimal;
 
 use crate::{
     dbeer::{
@@ -40,6 +41,7 @@ impl Postgres {
                 Type::INT2 => Self::value_or_null::<i16>(row, i),
                 Type::INT4 => Self::value_or_null::<i32>(row, i),
                 Type::INT8 => Self::value_or_null::<i64>(row, i),
+                Type::NUMERIC => Self::value_or_null::<Decimal>(row, i),
                 Type::FLOAT4 => Self::value_or_null::<f32>(row, i),
                 Type::FLOAT8 => Self::value_or_null::<f64>(row, i),
                 Type::TEXT | Type::VARCHAR | Type::BPCHAR => Self::value_or_null::<&str>(row, i),
