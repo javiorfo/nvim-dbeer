@@ -41,9 +41,51 @@ pub fn strip_sql_comments(sql: &str) -> String {
     .to_string()
 }
 
+#[allow(dead_code)]
+pub fn remove_sql_comments(sql: &str) -> String {
+    sql.lines()
+        .filter_map(|line| {
+            let trimmed_line = line.trim_start();
+            if trimmed_line.starts_with("--") {
+                None
+            } else if let Some(pos) = line.find("--") {
+                Some(&line[..pos])
+            } else {
+                Some(line)
+            }
+        })
+        .collect::<Vec<&str>>()
+        .join("\n")
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::dbeer::query::{split_queries, strip_sql_comments};
+    use crate::dbeer::query::{remove_sql_comments, split_queries, strip_sql_comments};
+
+    #[test]
+    fn test_comment_at_end_of_line() {
+        let sql = "SELECT * FROM users; -- Get all users";
+        let expected = "SELECT * FROM users; ";
+        assert_eq!(remove_sql_comments(sql), expected);
+    }
+
+    #[test]
+    fn test_full_line_comment() {
+        let sql = r#"
+        create table testtable (
+            -- This is a full-line comment
+            id serial primary key,
+            name text not null
+        );"#;
+
+        let expected = r#"
+        create table testtable (
+            id serial primary key,
+            name text not null
+        );"#;
+
+        assert_eq!(remove_sql_comments(sql), expected);
+    }
 
     #[test]
     fn test_strip() {

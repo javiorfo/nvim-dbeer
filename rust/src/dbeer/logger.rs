@@ -48,10 +48,10 @@ pub fn logger_init<P: AsRef<Path>>(
 }
 
 pub fn debug(args: std::fmt::Arguments) {
-    if let Some(logger) = LOGGER.lock().unwrap().as_ref() {
-        if logger.log_debug_enabled {
-            logger.log("DEBUG", &format!("{args}"));
-        }
+    if let Some(logger) = LOGGER.lock().unwrap().as_ref()
+        && logger.log_debug_enabled
+    {
+        logger.log("DEBUG", &format!("{args}"));
     }
 }
 

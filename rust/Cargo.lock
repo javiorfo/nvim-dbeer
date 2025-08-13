@@ -197,7 +197,7 @@ dependencies = [
  "serde_bytes",
  "serde_json",
  "time",
- "uuid",
+ "uuid 1.18.0",
 ]
 
 [[package]]
@@ -448,6 +448,7 @@ dependencies = [
  "rust_decimal",
  "serde_json",
  "sqlite",
+ "uuid 1.18.0",
 ]
 
 [[package]]
@@ -1203,7 +1204,7 @@ dependencies = [
  "tokio-rustls",
  "tokio-util",
  "typed-builder",
- "uuid",
+ "uuid 1.18.0",
  "webpki-roots",
 ]
 
@@ -1287,7 +1288,7 @@ dependencies = [
  "sha2",
  "subprocess",
  "thiserror 1.0.69",
- "uuid",
+ "uuid 1.18.0",
  "zstd",
 ]
 
@@ -1503,6 +1504,7 @@ dependencies = [
  "chrono",
  "fallible-iterator",
  "postgres-protocol",
+ "uuid 0.8.2",
 ]
 
 [[package]]
@@ -1767,7 +1769,7 @@ dependencies = [
  "rkyv_derive",
  "seahash",
  "tinyvec",
- "uuid",
+ "uuid 1.18.0",
 ]
 
 [[package]]
@@ -2500,9 +2502,15 @@ checksum = "b6c140620e7ffbb22c2dee59cafe6084a59b5ffc27a8859a5f0d494b5d52b6be"
 
 [[package]]
 name = "uuid"
-version = "1.17.0"
+version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3cf4199d1e5d15ddd86a694e4d0dffa9c323ce759fea589f00fef9d81cc1931d"
+checksum = "bc5cf98d8186244414c848017f0e2676b3fcb46807f6668a97dfe67359a3c4b7"
+
+[[package]]
+name = "uuid"
+version = "1.18.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f33196643e165781c20a5ead5582283a7dacbb87855d867fbc2df3f81eddc1be"
 dependencies = [
  "getrandom 0.3.3",
  "js-sys",

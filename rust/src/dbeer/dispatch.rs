@@ -1,12 +1,15 @@
 use super::command::Action;
-use crate::dbeer::{
-    self,
-    command::Command,
-    engine::{
-        Db2, Informix, Mongo, MsSql, MySql, Oracle, Postgres, Redis, SqlExecutor, Sqlite, Type,
+use crate::{
+    dbeer::{
+        self,
+        command::Command,
+        engine::{
+            Db2, Informix, Mongo, MsSql, MySql, Oracle, Postgres, Redis, SqlExecutor, Sqlite, Type,
+        },
+        query::{is_select_query, strip_sql_comments},
+        table::Table,
     },
-    query::{is_select_query, strip_sql_comments},
-    table::Table,
+    dbeer_debug,
 };
 
 #[allow(clippy::result_large_err)]
@@ -14,6 +17,8 @@ pub fn process(command: Command, engine_type: Type) -> dbeer::Result {
     match engine_type {
         Type::Sql => {
             let queries = strip_sql_comments(&command.queries);
+
+            dbeer_debug!("Cleaned: {queries}");
 
             let mut engine: Box<dyn SqlExecutor> = match command.engine.as_str() {
                 "postgres" => Box::new(Postgres::connect(&command.conn_str, &queries)?),

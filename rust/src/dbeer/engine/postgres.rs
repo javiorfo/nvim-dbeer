@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Display};
 
 use postgres::{
     Client, NoTls, Row,
@@ -38,20 +38,21 @@ impl Postgres {
         for (i, column) in row.columns().iter().enumerate() {
             let value = match *column.type_() {
                 Type::BOOL => Self::value_or_null::<bool>(row, i),
+                Type::DATE => Self::value_or_null::<chrono::NaiveDate>(row, i),
                 Type::INT2 => Self::value_or_null::<i16>(row, i),
                 Type::INT4 => Self::value_or_null::<i32>(row, i),
                 Type::INT8 => Self::value_or_null::<i64>(row, i),
-                Type::NUMERIC => Self::value_or_null::<Decimal>(row, i),
                 Type::FLOAT4 => Self::value_or_null::<f32>(row, i),
                 Type::FLOAT8 => Self::value_or_null::<f64>(row, i),
-                Type::TEXT | Type::VARCHAR | Type::BPCHAR => Self::value_or_null::<&str>(row, i),
-                Type::DATE => Self::value_or_null::<chrono::NaiveDate>(row, i),
-                Type::TIMESTAMP => Self::value_or_null::<chrono::NaiveDateTime>(row, i),
-                Type::TIMESTAMPTZ => Self::value_or_null::<chrono::DateTime<chrono::Utc>>(row, i),
                 Type::INT4_ARRAY => match row.try_get::<_, Option<Vec<i32>>>(i).ok().flatten() {
                     Some(arr) => format!("{arr:?}"),
                     None => "NULL".to_string(),
                 },
+                Type::NUMERIC => Self::value_or_null::<Decimal>(row, i),
+                Type::TEXT | Type::VARCHAR | Type::BPCHAR => Self::value_or_null::<&str>(row, i),
+                Type::TIMESTAMP => Self::value_or_null::<chrono::NaiveDateTime>(row, i),
+                Type::TIMESTAMPTZ => Self::value_or_null::<chrono::DateTime<chrono::Utc>>(row, i),
+                Type::UUID => Self::value_or_null::<UuidWrapper>(row, i),
                 ref unknown_type => {
                     dbeer_debug!("Postgres unknown type: {unknown_type}");
                     "UNKNOWN TYPE".to_string()
@@ -71,6 +72,32 @@ impl Postgres {
             .ok()
             .flatten()
             .map_or(String::from("NULL"), |v| v.to_string())
+    }
+}
+
+struct UuidWrapper(uuid::Uuid);
+
+impl<'a> FromSql<'a> for UuidWrapper {
+    fn accepts(ty: &Type) -> bool {
+        *ty == Type::UUID
+    }
+
+    fn from_sql(
+        _: &Type,
+        raw: &'a [u8],
+    ) -> Result<UuidWrapper, Box<dyn std::error::Error + Sync + Send>> {
+        if raw.len() != 16 {
+            return Err("UUID must be 16 bytes".into());
+        }
+
+        let uuid = uuid::Uuid::from_slice(raw)?;
+        Ok(UuidWrapper(uuid))
+    }
+}
+
+impl Display for UuidWrapper {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 
@@ -187,48 +214,56 @@ impl super::SqlExecutor for Postgres {
 
     fn table_info_query(&self) -> String {
         format!(
-            r#"SELECT 
-                UPPER(c.column_name) AS column_name,
-                c.data_type,
-                CASE
-                    WHEN c.is_nullable = 'YES' THEN ' '
-                    ELSE ' '
-                END AS not_null,
-                CASE
-                    WHEN c.character_maximum_length IS NULL THEN '-'
-                    ELSE CAST(c.character_maximum_length AS TEXT)
-                END AS length,
-                CASE  
-                    WHEN tc.constraint_type = 'PRIMARY KEY' THEN '  PRIMARY KEY'
-                    WHEN tc.constraint_type = 'FOREIGN KEY' THEN '  FOREIGN KEY'
-                    ELSE '-'
-                END AS constraint_type,
-                CASE 
-                    WHEN tc.constraint_type = 'FOREIGN KEY' THEN 
-                       '  ' || kcu2.table_name || '.' || kcu2.column_name
-                    ELSE 
-                        '-'
-                END AS referenced_table_column
-                FROM 
-                    information_schema.columns AS c
-                LEFT JOIN 
-                    information_schema.key_column_usage AS kcu 
-                    ON c.column_name = kcu.column_name 
-                    AND c.table_name = kcu.table_name
-                LEFT JOIN 
-                    information_schema.table_constraints AS tc 
-                    ON kcu.constraint_name = tc.constraint_name 
-                    AND kcu.table_name = tc.table_name
-                LEFT JOIN 
-                    information_schema.referential_constraints AS rc 
-                    ON tc.constraint_name = rc.constraint_name 
-                    AND tc.table_schema = rc.constraint_schema
-                LEFT JOIN 
-                    information_schema.key_column_usage AS kcu2 
-                    ON rc.unique_constraint_name = kcu2.constraint_name 
-                    AND rc.unique_constraint_schema = kcu2.table_schema
-                WHERE 
-                    c.table_name = '{}'"#,
+            r#"SELECT
+                    UPPER(c.column_name) AS column_name,
+                    c.data_type,
+                    CASE
+                        WHEN c.is_nullable = 'YES' THEN ' '
+                        ELSE ' '
+                    END AS not_null,
+                    CASE
+                        WHEN c.character_maximum_length IS NULL THEN '-'
+                        ELSE CAST(c.character_maximum_length AS TEXT)
+                    END AS length,
+                    string_agg(
+                        CASE
+                            WHEN tc.constraint_type = 'PRIMARY KEY' THEN ' PRIMARY KEY'
+                            WHEN tc.constraint_type = 'FOREIGN KEY' THEN ' FOREIGN KEY'
+                            ELSE ''
+                        END,
+                        ' '
+                    ) AS constraint_type,
+                    string_agg(
+                        CASE
+                            WHEN tc.constraint_type = 'FOREIGN KEY' THEN
+                                ' ' || ccu.table_name || '.' || ccu.column_name
+                            ELSE
+                                ''
+                        END,
+                        ''
+                    ) AS referenced_table_column
+                    FROM
+                        information_schema.columns AS c
+                    LEFT JOIN
+                        information_schema.key_column_usage AS kcu
+                        ON c.table_name = kcu.table_name
+                        AND c.column_name = kcu.column_name
+                    LEFT JOIN
+                        information_schema.table_constraints AS tc
+                        ON kcu.constraint_name = tc.constraint_name
+                        AND kcu.table_schema = tc.table_schema
+                    LEFT JOIN
+                        information_schema.referential_constraints AS rc
+                        ON tc.constraint_name = rc.constraint_name
+                    LEFT JOIN
+                        information_schema.key_column_usage AS ccu
+                        ON rc.unique_constraint_name = ccu.constraint_name
+                    WHERE
+                        c.table_name = '{}'
+                    GROUP BY
+                        c.column_name, c.data_type, c.is_nullable, c.character_maximum_length
+                    ORDER BY
+                        c.column_name;"#,
             self.queries
         )
     }
