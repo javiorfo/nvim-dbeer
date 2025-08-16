@@ -261,9 +261,9 @@ impl super::SqlExecutor for Postgres {
                     WHERE
                         c.table_name = '{}'
                     GROUP BY
-                        c.column_name, c.data_type, c.is_nullable, c.character_maximum_length
+                        c.data_type, c.column_name, c.is_nullable, c.character_maximum_length
                     ORDER BY
-                        c.column_name;"#,
+                        constraint_type desc;"#,
             self.queries
         )
     }
