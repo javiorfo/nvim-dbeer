@@ -53,11 +53,12 @@ return {
             default_host = host,
             executor = exe,
             get_connection_string = function(connection)
-                return string.format("mongodb://%s%s%s:%s",
+                return string.format("mongodb://%s%s%s:%s/%s",
                     connection.user and connection.user or "",
                     connection.password and ":" .. connection.password .. "@" or "",
                     connection.host or host,
-                    connection.port or default_mongo_port
+                    connection.port or default_mongo_port,
+                    connection.dbname
                 )
             end
         },
