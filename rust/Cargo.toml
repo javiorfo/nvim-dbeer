@@ -6,7 +6,7 @@ rust-version = "1.88"
 
 [dependencies]
 chrono = "0.4.41"
-mongodb = { version = "3.2.3", features = ["sync"] }
+mongodb = { version = "3.3.0", features = ["sync"] }
 mysql = "26.0.0"
 odbc = "0.17.0"
 postgres = { version = "0.19.10", features = ["with-chrono-0_4", "with-uuid-0_8"] }
