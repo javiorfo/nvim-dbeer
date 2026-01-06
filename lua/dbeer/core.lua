@@ -76,7 +76,7 @@ function M.run()
             util.logger:debug(vim.inspect(result))
             if string.sub(result[1], 1, 7) ~= "[ERROR]" then
                 if result[2] then
-                    vim.cmd(string.format("%dsp %s", setup.output.buffer_height, result[2]))
+                    vim.cmd(string.format("%dsp ++enc=utf-8 %s", setup.output.buffer_height, result[2]))
                     vim.cmd("setlocal nowrap")
                     vim.cmd("setlocal noma")
                     util.logger:info(string.format("  Query executed correctly [%.2f secs]", elapsed_time))

@@ -1,6 +1,6 @@
 module github.com/javiorfo/nvim-dbeer/go
 
-go 1.23.2
+go 1.25.5
 
 require (
 	github.com/alexbrainman/odbc v0.0.0-20170616052051-0ee187a7ebce

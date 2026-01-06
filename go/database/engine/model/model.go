@@ -92,7 +92,7 @@ func (p *ProtoSQL) execute(db *sql.DB) {
 		}
 
 		if query.IsInsertUpdateOrDelete(p.Queries) {
-			fmt.Print(fmt.Sprintf("  Row(s) affected: %d", rowsAffected))
+			fmt.Printf("  Row(s) affected: %d", rowsAffected)
 		} else {
 			fmt.Print("  Statement executed correctly.")
 		}
@@ -180,10 +180,14 @@ func (p *ProtoSQL) ExecuteSelect(db *sql.DB) {
 				strValue = fmt.Sprintf("%v", *value.(*any))
 			}
 
-			value := strings.Replace(strValue, " +0000 +0000", "", -1)
+			value := strings.ReplaceAll(strValue, " +0000 +0000", "")
 
 			if value == "<nil>" {
 				value = "NULL"
+			}
+
+			if i := strings.IndexAny(value, "\n\r"); i != -1 {
+				value = value[:i] + "..."
 			}
 
 			valueLength := utf8.RuneCountInString(value) + 2
