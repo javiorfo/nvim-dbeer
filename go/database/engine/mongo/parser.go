@@ -36,18 +36,18 @@ type mongoFunc string
 
 const (
 	Find           mongoFunc = "find"
-	Sort                     = "sort"
-	Skip                     = "skip"
-	Limit                    = "limit"
-	CountDocuments           = "countDocuments"
-	FindOne                  = "findOne"
-	InsertOne                = "insertOne"
-	InsertMany               = "insertMany"
-	DeleteOne                = "deleteOne"
-	DeleteMany               = "deleteMany"
-	UpdateOne                = "updateOne"
-	UpdateMany               = "updateMany"
-	Drop                     = "drop"
+	Sort           mongoFunc = "sort"
+	Skip           mongoFunc = "skip"
+	Limit          mongoFunc = "limit"
+	CountDocuments mongoFunc = "countDocuments"
+	FindOne        mongoFunc = "findOne"
+	InsertOne      mongoFunc = "insertOne"
+	InsertMany     mongoFunc = "insertMany"
+	DeleteOne      mongoFunc = "deleteOne"
+	DeleteMany     mongoFunc = "deleteMany"
+	UpdateOne      mongoFunc = "updateOne"
+	UpdateMany     mongoFunc = "updateMany"
+	Drop           mongoFunc = "drop"
 )
 
 func getQuerySections(query string) (*mongoCommand, error) {
