@@ -26,7 +26,7 @@ type Executor interface {
 }
 
 func Context(option model.Option, proto model.ProtoSQL) error {
-    logger.Debugf("Option selected %d, engine %s", option, proto.Engine)
+    logger.Debugf("Option selected %d, engine %s", int(option), proto.Engine)
 	switch proto.Engine {
 	case POSTGRES:
 		return run(&engine.Postgres{ProtoSQL: proto}, option)

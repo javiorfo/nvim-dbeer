@@ -21,6 +21,7 @@ type Mongo struct {
 }
 
 func (m *Mongo) getDB(c context.Context) (*mongo.Database, func(), error) {
+	logger.Debugf("Connection string: %s", m.ConnStr)
 	clientOptions := options.Client().ApplyURI(m.ConnStr)
 
 	client, err := mongo.Connect(c, clientOptions)

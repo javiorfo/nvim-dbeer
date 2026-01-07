@@ -8,7 +8,6 @@ import (
 )
 
 var logger *log.Logger
-var logFile *os.File
 var logDebug bool
 
 const DATE_FORMAT = "2006/01/02 15:04:05"
@@ -30,25 +29,25 @@ func Initialize(logFileName string, logDebugEnabled bool) func() {
 func Debug(message string) {
 	if logDebug {
 		timestamp := time.Now().Format(DATE_FORMAT)
-		logger.Println(fmt.Sprintf("[DEBUG] [%s] [GO] %s", timestamp, message))
+		logger.Printf("[DEBUG] [%s] [GO] %s\n", timestamp, message)
 	}
 }
 
 func Debugf(format string, a ...any) {
 	if logDebug {
-		finalFormat := "[DEBUG] [%s] [GO] " + format
 		timestamp := time.Now().Format(DATE_FORMAT)
-		logger.Println(fmt.Sprintf(finalFormat, timestamp, a))
+		finalFormat := fmt.Sprintf("[DEBUG] [%s] [GO] ", timestamp) + format
+		logger.Printf(finalFormat, a...)
 	}
 }
 
 func Error(message string) {
 	timestamp := time.Now().Format(DATE_FORMAT)
-	logger.Println(fmt.Sprintf("[ERROR] [%s] [GO] %s", timestamp, message))
+	logger.Printf("[ERROR] [%s] [GO] %s\n", timestamp, message)
 }
 
 func Errorf(format string, a ...any) {
-	finalFormat := "[ERROR] [%s] [GO] " + format
 	timestamp := time.Now().Format(DATE_FORMAT)
-	logger.Println(fmt.Sprintf(finalFormat, timestamp, a))
+	finalFormat := fmt.Sprintf("[ERROR] [%s] [GO] ", timestamp) + format
+	logger.Printf(finalFormat, a...)
 }
