@@ -28,7 +28,7 @@ const (
 	RUN Option = iota + 1
 	TABLES
 	TABLE_INFO
-    PING
+	PING
 )
 
 func (p *ProtoSQL) GetDB() (*sql.DB, func(), error) {
@@ -41,20 +41,20 @@ func (p *ProtoSQL) GetDB() (*sql.DB, func(), error) {
 }
 
 func (p *ProtoSQL) Ping() {
-    db, closer, err := p.GetDB()
+	db, closer, err := p.GetDB()
 	if err != nil {
 		fmt.Print(err.Error())
 		return
 	}
 	defer closer()
 
-    err = db.Ping()
-    if err != nil {
+	err = db.Ping()
+	if err != nil {
 		fmt.Printf("[ERROR] %v", err)
-        return
-    }
+		return
+	}
 
-    fmt.Println("Successfully connected to the database!")
+	fmt.Println("Successfully connected to the database!")
 }
 
 func (p *ProtoSQL) Run() {
@@ -65,12 +65,12 @@ func (p *ProtoSQL) Run() {
 	}
 	defer closer()
 
-    logger.Debugf("Query %s", p.Queries)
+	logger.Debugf("Query %s", p.Queries)
 	if query.IsSelectQuery(p.Queries) {
-        logger.Debug("is select...")
+		logger.Debug("is select...")
 		p.ExecuteSelect(db)
 	} else {
-        logger.Debug("is NOT select...")
+		logger.Debug("is NOT select...")
 		p.execute(db)
 	}
 }
@@ -180,24 +180,14 @@ func (p *ProtoSQL) ExecuteSelect(db *sql.DB) {
 				strValue = fmt.Sprintf("%v", *value.(*any))
 			}
 
-			value := strings.ReplaceAll(strValue, " +0000 +0000", "")
-
-			if value == "<nil>" {
-				value = "NULL"
-			}
-
-			if i := strings.IndexAny(value, "\n\r"); i != -1 {
-				value = value[:i] + "..."
-			}
-
-			valueLength := utf8.RuneCountInString(value) + 2
-			results[i] = " " + value
+			field, fieldLength := formattedField(strValue)
+			results[i] = field
 			index := i + 1
 
-			if dbeer.Headers[index].Length < valueLength {
+			if dbeer.Headers[index].Length < fieldLength {
 				dbeer.Headers[index] = table.Header{
 					Name:   dbeer.Headers[index].Name,
-					Length: valueLength,
+					Length: fieldLength,
 				}
 			}
 		}
@@ -205,7 +195,7 @@ func (p *ProtoSQL) ExecuteSelect(db *sql.DB) {
 	}
 
 	if len(dbeer.Rows) > 0 {
-        logger.Debug("Generating dbeer table...")
+		logger.Debug("Generating dbeer table...")
 		dbeer.Generate()
 	} else {
 		fmt.Print("  Query has returned 0 results.")
@@ -219,7 +209,7 @@ func (p *ProtoSQL) GetTables() {
 	}
 	defer closer()
 
-    logger.Debugf("Query to get tables: %s", p.Queries)
+	logger.Debugf("Query to get tables: %s", p.Queries)
 
 	rows, err := db.Query(p.Queries)
 	if err != nil {
@@ -255,7 +245,7 @@ func (p *ProtoSQL) GetTableInfo() {
 	defer closer()
 
 	p.Queries = p.GetTableInfoQuery(p.Queries)
-    logger.Debugf("Query to get table info: %s", p.Queries)
+	logger.Debugf("Query to get table info: %s", p.Queries)
 
 	p.ExecuteSelect(db)
 }
@@ -303,4 +293,18 @@ func (ProtoSQL) GetTableInfoQuery(tableName string) string {
                     AND rc.unique_constraint_schema = kcu2.table_schema
                 WHERE 
                     c.table_name = '` + tableName + `';`
+}
+
+func formattedField(str string) (string, int) {
+	value := strings.ReplaceAll(str, " +0000 +0000", "")
+
+	if value == "<nil>" {
+		value = "NULL"
+	}
+
+	if i := strings.IndexAny(value, "\n\r"); i != -1 {
+		value = value[:i] + "..."
+	}
+
+	return " " + value, utf8.RuneCountInString(value) + 2
 }

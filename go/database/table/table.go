@@ -30,64 +30,79 @@ type DBeer struct {
 func (t DBeer) Generate() {
 	b := border.GetBorder(border.BorderOption(t.BorderStyle))
 
-	headerUp := b.CornerUpLeft
-	headerMid := b.Vertical
-	headerBottom := b.VerticalLeft
+	var headerUp strings.Builder
+	headerUp.WriteString(b.CornerUpLeft)
+
+	var headerMid strings.Builder
+	headerMid.WriteString(b.Vertical)
+
+	var headerBottom strings.Builder
+	headerBottom.WriteString(b.VerticalLeft)
 
 	headers := t.Headers
 	headersLength := len(headers)
 	for key := 1; key < headersLength+1; key++ {
 		length := headers[key].Length
-		headerUp += strings.Repeat(b.Horizontal, length)
-		headerBottom += strings.Repeat(b.Horizontal, length)
-		headerMid += addSpaces(headers[key].Name, length)
-		headerMid += b.Vertical
+		headerUp.WriteString(strings.Repeat(b.Horizontal, length))
+		headerBottom.WriteString(strings.Repeat(b.Horizontal, length))
+		headerMid.WriteString(addSpaces(headers[key].Name, length))
+		headerMid.WriteString(b.Vertical)
 
 		if key < headersLength {
-			headerUp += b.DivisionUp
-			headerBottom += b.Intersection
+			headerUp.WriteString(b.DivisionUp)
+			headerBottom.WriteString(b.Intersection)
 		} else {
-			headerUp += b.CornerUpRight
-			headerBottom += b.VerticalRight
+			headerUp.WriteString(b.CornerUpRight)
+			headerBottom.WriteString(b.VerticalRight)
 		}
 	}
 
 	rows := t.Rows
 	table := make([]string, 3, (len(rows)*2)+3)
-	table[0] = headerUp + "\n"
-	table[1] = headerMid + "\n"
-	table[2] = headerBottom + "\n"
+
+	headerUp.WriteByte('\n')
+	table[0] = headerUp.String()
+
+	headerMid.WriteByte('\n')
+	table[1] = headerMid.String()
+
+	headerBottom.WriteByte('\n')
+	table[2] = headerBottom.String()
 
 	rowsLength := len(rows) - 1
 	rowFieldsLength := len(rows[0]) - 1
 	for i, row := range rows {
-		value := b.Vertical
-		var line string
+		var value strings.Builder
+		value.WriteString(b.Vertical)
+
+		var line strings.Builder
 
 		if i < rowsLength {
-			line += b.VerticalLeft
+			line.WriteString(b.VerticalLeft)
 		} else {
-			line += b.CornerBottomLeft
+			line.WriteString(b.CornerBottomLeft)
 		}
 
 		for j, field := range row {
-			value += addSpaces(field, headers[j+1].Length)
-			value += b.Vertical
+			value.WriteString(addSpaces(field, headers[j+1].Length))
+			value.WriteString(b.Vertical)
 
-			line += strings.Repeat(b.Horizontal, headers[j+1].Length)
+			line.WriteString(strings.Repeat(b.Horizontal, headers[j+1].Length))
 			if i < rowsLength {
 				if j < rowFieldsLength {
-					line += b.Intersection
+					line.WriteString(b.Intersection)
 				} else {
-					line += b.VerticalRight
+					line.WriteString(b.VerticalRight)
 				}
 			} else if j < rowFieldsLength {
-				line += b.DivisionBottom
+				line.WriteString(b.DivisionBottom)
 			} else {
-				line += b.CornerBottomRight
+				line.WriteString(b.CornerBottomRight)
 			}
 		}
-		table = append(table, value+"\n", line+"\n")
+		line.WriteByte('\n')
+		value.WriteByte('\n')
+		table = append(table, value.String(), line.String())
 	}
 
 	filePath := CreateDBeerFileFormat(t.DestFolder)
