@@ -6,6 +6,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/araddon/dateparse"
 	"github.com/javiorfo/nvim-dbeer/go/database/query"
 	"github.com/javiorfo/nvim-dbeer/go/database/table"
 	"github.com/javiorfo/nvim-dbeer/go/logger"
@@ -296,15 +297,29 @@ func (ProtoSQL) GetTableInfoQuery(tableName string) string {
 }
 
 func formattedField(str string) (string, int) {
-	value := strings.ReplaceAll(str, " +0000 +0000", "")
-
-	if value == "<nil>" {
-		value = "NULL"
+	if str == "<nil>" {
+		return stringAndLength("NULL")
 	}
 
-	if i := strings.IndexAny(value, "\n\r"); i != -1 {
-		value = value[:i] + "..."
+	if date, err := dateparse.ParseAny(str); err == nil {
+		if date.Hour() == 0 && date.Minute() == 0 && date.Second() == 0 && date.Nanosecond() == 0 {
+			return stringAndLength(date.Format("2006-01-02"))
+		} else {
+			return stringAndLength(date.Format("2006-01-02 15:04:05"))
+		}
 	}
 
-	return " " + value, utf8.RuneCountInString(value) + 2
+	if len(str) > 100 {
+		return stringAndLength(str[:100] + "...")
+	}
+
+	if i := strings.IndexAny(str, "\n\r"); i != -1 {
+		return stringAndLength(str[:i] + "...")
+	}
+
+	return stringAndLength(str)
+}
+
+func stringAndLength(str string) (string, int) {
+	return " " + str, utf8.RuneCountInString(str) + 2
 }

@@ -4,6 +4,7 @@ go 1.25.5
 
 require (
 	github.com/alexbrainman/odbc v0.0.0-20170616052051-0ee187a7ebce
+	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/denisenkom/go-mssqldb v0.12.3
 	github.com/glebarez/go-sqlite v1.22.0
 	github.com/go-sql-driver/mysql v1.8.1
