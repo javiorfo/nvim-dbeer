@@ -170,6 +170,7 @@ opts = {
                 dbname = "db_dummy",
                 user = "admin",
                 password = "admin",
+                conn_query= "/?authSource=admin" -- Option to add query strings to connection
             },
             {
                 name = "PostgreSQL example",

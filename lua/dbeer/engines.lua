@@ -22,7 +22,7 @@ return {
                     connection.dbname,
                     connection.user and "user=" .. connection.user or "",
                     connection.password and "password=" .. connection.password or ""
-                )
+                ) .. (connection.conn_query or "")
             end
         },
         mysql = {
@@ -37,7 +37,7 @@ return {
                     connection.host or host,
                     connection.port or default_mysql_port,
                     connection.dbname
-                )
+                ) .. (connection.conn_query or "")
             end
         },
         mongo = {
@@ -46,13 +46,13 @@ return {
             default_host = host,
             executor = go_executor,
             get_connection_string = function(connection)
-                return string.format("mongodb://%s%s%s:%s/%s?authSource=admin",
+                return string.format("mongodb://%s%s%s:%s/%s",
                     connection.user and connection.user or "",
                     connection.password and ":" .. connection.password .. "@" or "",
                     connection.host or host,
                     connection.port or default_mongo_port,
                     connection.dbname
-                )
+                ) .. (connection.conn_query or "")
             end
         },
         mssql = {
@@ -67,7 +67,7 @@ return {
                     connection.host or host,
                     connection.port or default_mssql_port,
                     connection.dbname
-                )
+                ) .. (connection.conn_query or "")
             end
         },
         oracle = {
@@ -82,7 +82,7 @@ return {
                     connection.host or host,
                     connection.port or default_oracle_port,
                     connection.dbname
-                )
+                ) .. (connection.conn_query or "")
             end
         },
         informix = {
@@ -95,7 +95,7 @@ return {
                     connection.dbname,
                     connection.user and "UID=" .. connection.user .. ";" or "",
                     connection.password and "PWD=" .. connection.password .. ";" or ""
-                )
+                ) .. (connection.conn_query or "")
             end
         },
         db2 = {
@@ -108,7 +108,7 @@ return {
                     connection.dbname,
                     connection.user and "UID=" .. connection.user .. ";" or "",
                     connection.password and "PWD=" .. connection.password .. ";" or ""
-                )
+                ) .. (connection.conn_query or "")
             end
         },
         sqlite = {
