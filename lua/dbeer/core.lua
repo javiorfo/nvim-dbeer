@@ -73,7 +73,12 @@ function M.run()
         speed_ms = 200,
         spinner = util.get_numeral_sprinner(),
         on_success = function()
-            util.logger:debug(vim.inspect(result))
+            util.logger:debug("results from backend: ", vim.inspect(result))
+            if #result == 0 then
+                util.logger:error("Internal error")
+                return
+            end
+
             if string.sub(result[1], 1, 7) ~= "[ERROR]" then
                 if result[2] then
                     vim.cmd(string.format("%dsp ++enc=utf-8 %s", setup.output.buffer_height, result[2]))

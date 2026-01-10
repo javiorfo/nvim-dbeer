@@ -309,12 +309,12 @@ func formattedField(str string) (string, int) {
 		}
 	}
 
-	if len(str) > 100 {
-		return stringAndLength(str[:100] + "...")
-	}
-
 	if i := strings.IndexAny(str, "\n\r"); i != -1 {
 		return stringAndLength(str[:i] + "...")
+	}
+
+	if len(str) > 100 {
+		return stringAndLength(str[:100] + "...")
 	}
 
 	return stringAndLength(str)
