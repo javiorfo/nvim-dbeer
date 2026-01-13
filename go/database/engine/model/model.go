@@ -4,9 +4,9 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 	"unicode/utf8"
 
-	"github.com/araddon/dateparse"
 	"github.com/javiorfo/nvim-dbeer/go/database/query"
 	"github.com/javiorfo/nvim-dbeer/go/database/table"
 	"github.com/javiorfo/nvim-dbeer/go/logger"
@@ -174,14 +174,7 @@ func (p *ProtoSQL) ExecuteSelect(db *sql.DB) {
 
 		results := make([]string, lenColumns)
 		for i, value := range values {
-			var strValue string
-			if bytesValue, ok := (*value.(*any)).([]byte); ok {
-				strValue = string(bytesValue)
-			} else {
-				strValue = fmt.Sprintf("%v", *value.(*any))
-			}
-
-			field, fieldLength := formattedField(strValue)
+			field, fieldLength := formattedField(value)
 			results[i] = field
 			index := i + 1
 
@@ -296,28 +289,47 @@ func (ProtoSQL) GetTableInfoQuery(tableName string) string {
                     c.table_name = '` + tableName + `';`
 }
 
-func formattedField(str string) (string, int) {
-	if str == "<nil>" {
+func formattedField(value any) (string, int) {
+	if value == nil {
 		return stringAndLength("NULL")
 	}
 
-	if date, err := dateparse.ParseAny(str); err == nil {
-		if date.Hour() == 0 && date.Minute() == 0 && date.Second() == 0 && date.Nanosecond() == 0 {
-			return stringAndLength(date.Format("2006-01-02"))
-		} else {
-			return stringAndLength(date.Format("2006-01-02 15:04:05"))
+	switch v := (*value.(*any)).(type) {
+	case time.Time:
+		return formatTime(v)
+	case *time.Time:
+		if v == nil {
+			return stringAndLength("NULL")
 		}
+		return formatTime(*v)
+	case []byte:
+		return processString(string(v))
+	default:
+		return processString(fmt.Sprint(v))
+	}
+}
+
+func formatTime(date time.Time) (string, int) {
+	if date.Hour() == 0 && date.Minute() == 0 && date.Second() == 0 && date.Nanosecond() == 0 {
+		return stringAndLength(date.Format("2006-01-02"))
+	}
+	return stringAndLength(date.Format("2006-01-02 15:04:05"))
+}
+
+func processString(s string) (string, int) {
+	if s == "<nil>" {
+		return stringAndLength("NULL")
 	}
 
-	if i := strings.IndexAny(str, "\n\r"); i != -1 {
-		return stringAndLength(str[:i] + "...")
+	if i := strings.IndexAny(s, "\n\r"); i != -1 {
+		return stringAndLength(s[:i] + "...")
 	}
 
-	if len(str) > 100 {
-		return stringAndLength(str[:100] + "...")
+	if len(s) > 100 {
+		return stringAndLength(s[:100] + "...")
 	}
 
-	return stringAndLength(str)
+	return stringAndLength(s)
 }
 
 func stringAndLength(str string) (string, int) {
