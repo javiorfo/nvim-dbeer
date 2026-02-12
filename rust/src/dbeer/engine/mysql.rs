@@ -5,7 +5,7 @@ use mysql::{Params, Pool, PooledConn, prelude::Queryable};
 use crate::{
     dbeer::{
         self, Format, Header,
-        query::{is_insert_update_or_delete, split_queries},
+        query::{is_insert_update_or_delete, split_queries, truncate_field_string},
     },
     dbeer_debug,
 };
@@ -64,7 +64,11 @@ impl super::SqlExecutor for MySql {
             }
 
             for column_index in 0..results_columns.len() {
-                let value: String = row_value.get(column_index).unwrap_or("NULL".to_string());
+                let value = row_value
+                    .get::<String, _>(column_index)
+                    .map(truncate_field_string)
+                    .unwrap_or("NULL".to_string());
+
                 columns.push(format!(" {value}"));
                 let column = headers.get_mut(&(column_index + 2)).unwrap();
                 let length = value.chars().count() + 2;

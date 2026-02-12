@@ -1,5 +1,22 @@
 use regex::Regex;
 
+pub fn truncate_field_string<T: ToString>(field: T) -> String {
+    let mut str = field.to_string();
+
+    if let Some(index) = str.find('\n') {
+        str = str[..index].to_string();
+        str.push_str("...");
+    }
+
+    if str.len() > 100 {
+        str = str[..100].to_string();
+        str.push_str("...");
+        str
+    } else {
+        str
+    }
+}
+
 pub fn is_select_query(query: &str) -> bool {
     query.trim().to_lowercase().starts_with("select")
 }
@@ -60,7 +77,34 @@ pub fn remove_sql_comments(sql: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use crate::dbeer::query::{remove_sql_comments, split_queries, strip_sql_comments};
+    use crate::dbeer::query::{
+        remove_sql_comments, split_queries, strip_sql_comments, truncate_field_string,
+    };
+
+    #[test]
+    fn test_length_truncation() {
+        let input = "Hello world";
+        assert_eq!(truncate_field_string(input), "Hello world");
+
+        let input = "a".repeat(110);
+        let mut expected = "a".repeat(100);
+        expected.push_str("...");
+        assert_eq!(truncate_field_string(input), expected);
+    }
+
+    #[test]
+    fn test_newline_truncation() {
+        let input = "First line\nSecond line";
+        assert_eq!(truncate_field_string(input), "First line...");
+
+        let input = "First line\r\nSecond line";
+        let result = truncate_field_string(input);
+        assert_eq!(result, "First line\r...");
+
+        let mut input = String::from("Short\n");
+        input.push_str(&"a".repeat(110));
+        assert_eq!(truncate_field_string(input), "Short...");
+    }
 
     #[test]
     fn test_comment_at_end_of_line() {

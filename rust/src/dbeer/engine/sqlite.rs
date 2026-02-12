@@ -5,7 +5,7 @@ use sqlite::{Connection, State};
 use crate::{
     dbeer::{
         self, Format, Header, Table,
-        query::{is_insert_update_or_delete, split_queries},
+        query::{is_insert_update_or_delete, split_queries, truncate_field_string},
     },
     dbeer_debug,
 };
@@ -54,7 +54,8 @@ impl super::SqlExecutor for Sqlite {
             counter += 1;
 
             for i in 0..stmt.column_count() {
-                let value: String = stmt.read(i).unwrap_or("NULL".to_string());
+                let mut value: String = stmt.read(i).unwrap_or("NULL".to_string());
+                value = truncate_field_string(value);
                 columns.push(format!(" {value}"));
                 let column = headers.get_mut(&(i + 2)).unwrap();
                 let length = value.chars().count() + 2;

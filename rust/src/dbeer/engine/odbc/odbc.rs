@@ -10,7 +10,7 @@ use crate::{
     dbeer::{
         self, Header, Table,
         engine::SqlExecutor,
-        query::{is_insert_update_or_delete, split_queries},
+        query::{is_insert_update_or_delete, split_queries, truncate_field_string},
     },
     dbeer_debug,
 };
@@ -84,6 +84,7 @@ impl SqlExecutor for Odbc {
                             .get_data::<String>(i as u16)
                             .map_err(dbeer::Error::Odbc)?
                         {
+                            let value = truncate_field_string(value);
                             columns.push(format!(" {value}"));
                             value
                         } else {

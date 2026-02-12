@@ -9,7 +9,7 @@ use rust_decimal::Decimal;
 use crate::{
     dbeer::{
         self, Format, Header, Table,
-        query::{is_insert_update_or_delete, split_queries},
+        query::{is_insert_update_or_delete, split_queries, truncate_field_string},
     },
     dbeer_debug,
 };
@@ -71,7 +71,7 @@ impl Postgres {
         row.try_get::<_, Option<T>>(i)
             .ok()
             .flatten()
-            .map_or(String::from("NULL"), |v| v.to_string())
+            .map_or(String::from("NULL"), |v| truncate_field_string(v))
     }
 }
 
