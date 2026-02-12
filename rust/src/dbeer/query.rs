@@ -1,20 +1,16 @@
 use regex::Regex;
 
 pub fn truncate_field_string<T: ToString>(field: T) -> String {
-    let mut str = field.to_string();
+    let mut string = field.to_string();
 
-    if let Some(index) = str.find('\n') {
-        str = str[..index].to_string();
-        str.push_str("...");
+    if string.lines().count() > 1 {
+        string = format!("{}...", string.lines().next().unwrap_or_default());
     }
 
-    if str.len() > 100 {
-        str = str[..100].to_string();
-        str.push_str("...");
-        str
-    } else {
-        str
+    if string.len() > 100 {
+        string = format!("{}...", &string[..100]);
     }
+    string
 }
 
 pub fn is_select_query(query: &str) -> bool {
@@ -99,7 +95,7 @@ mod tests {
 
         let input = "First line\r\nSecond line";
         let result = truncate_field_string(input);
-        assert_eq!(result, "First line\r...");
+        assert_eq!(result, "First line...");
 
         let mut input = String::from("Short\n");
         input.push_str(&"a".repeat(110));
